@@ -1,0 +1,8 @@
+---
+ - name: test
+   hosts: k8s
+   become: yes
+   gather_facts: no
+   tasks:
+   - name: test
+     ping:

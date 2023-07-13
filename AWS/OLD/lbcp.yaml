@@ -1,0 +1,14 @@
+    - name: elb test
+      ec2_elb_lb:
+        name: test
+        state: present
+        region: ap-northeast-2
+        zones:
+          - ap-northeast-2a
+          - ap-northeast-2c
+        listeners:
+          - protocol: http
+            load_balancer_port: 80
+            instance_port: 80
+        tags:
+          name: elb_test

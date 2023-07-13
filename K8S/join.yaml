@@ -1,0 +1,9 @@
+---
+- name: send token
+  hosts: worker
+  become: yes
+  gather_facts: no
+  tasks: 
+    - name: join k8s cluster
+      shell: tail -2 token | sh
+

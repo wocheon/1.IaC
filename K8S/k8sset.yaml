@@ -1,0 +1,35 @@
+---
+- name: create k8s token
+  hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create token
+      shell: kubeadm init>token
+    
+    - name: get tokenfile
+      fetch:
+        src: "/root/token"
+        dest: "token"
+        flat: yes
+
+    - name: copy calico.sh
+      copy:
+        src: "calico.sh"
+        dest: "calico.sh"
+
+    - name: apply calico plugin
+      shell: sh calico.sh
+
+- name: send token
+  hosts: worker
+  become: yes
+  gather_facts: no
+  tasks: 
+    - name: send token
+      copy:
+        src: "token"
+        dest: "token"
+    - name: join k8s cluster
+      shell: tail -2 token | sh
+
