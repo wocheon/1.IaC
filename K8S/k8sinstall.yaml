@@ -16,6 +16,7 @@
        echo "1"> /proc/sys/net/bridge/bridge-nf-call-iptables
        echo "1" > /proc/sys/net/ipv4/ip_forward
        rm -rf /etc/containerd/config.toml
+       systemctl restart containerd
        
    - name: install k8s
      shell: |
@@ -37,4 +38,7 @@
        EOF
        yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
        systemctl enable kubelet --now
-     
+       echo "1"> /proc/sys/net/bridge/bridge-nf-call-iptables
+       echo "1" > /proc/sys/net/ipv4/ip_forward
+       rm -rf /etc/containerd/config.toml
+       systemctl restart containerd     
