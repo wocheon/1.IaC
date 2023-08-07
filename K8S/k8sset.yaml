@@ -13,13 +13,13 @@
         dest: "token"
         flat: yes
 
-    - name: copy calico.sh
+    - name: copy cni_setting.sh
       copy:
-        src: "calico.sh"
-        dest: "calico.sh"
+        src: "cni_setting.sh"
+        dest: "cni_setting.sh"
 
-    - name: apply calico plugin
-      shell: sh calico.sh
+    - name: apply CNI plugin
+      shell: sh cni_setting.sh 
 
 - name: send token
   hosts: worker
@@ -33,3 +33,15 @@
     - name: join k8s cluster
       shell: tail -2 token | sh
 
+- name: set cni
+  hosts: k8s
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: set cni
+      shell: |
+        mkdir -p /run/flannel/
+        echo "FLANNEL_NETWORK=10.244.0.0/16" > /run/flannel/subnet.env
+        echo "FLANNEL_SUBNET=10.244.0.1/24 " > /run/flannel/subnet.env
+        echo "FLANNEL_MTU=1450" > /run/flannel/subnet.env
+        echo "FLANNEL_IPMASQ=true" > /run/flannel/subnet.env

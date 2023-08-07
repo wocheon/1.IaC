@@ -6,4 +6,3 @@
   tasks: 
     - name: join k8s cluster
       shell: tail -2 token | sh
-
