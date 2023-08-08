@@ -5,6 +5,7 @@
 * CNI Plugin : Flannel
 
 * pod cidr : 10.244.0.0/16 ( Flannel Recommanded )
+	- need to check /run/flannel/subnet.env
 
 * Default SETING
 - SELINUX OFF
