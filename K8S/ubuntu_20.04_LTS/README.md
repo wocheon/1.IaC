@@ -1,6 +1,6 @@
 [K8S Install by Ansible ]
 
-* OS  ubuntu 20.04 (GCP) 
+* OS  Ubuntu 20.04 (GCP) 
 
 * CNI Plugin : Flannel
 
