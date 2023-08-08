@@ -1,18 +1,6 @@
 [K8S Install by Ansible ]
 
-* OS : CentOS 7 
-
-* CNI Plugin : Flannel
-
-* pod cidr : 10.244.0.0/16 ( Flannel Recommanded )
-	- need to check /run/flannel/subnet.env
-
-* Default SETING
-- SELINUX OFF
-- FIREWALLD OFF
-- SWAP OFF
-- /proc/sys/net/bridge/bridge-nf-call-iptables => 1
-- /proc/sys/net/ipv4/ip_forward => 1
+* Auto Install K8S using by Ansible 
 
 
 * Necessary Packages
@@ -31,8 +19,3 @@
 
 3. Ansible work check > ansible all -m ping 
 
-* Playbook order
-
-1. k8sinstall.yaml
-2. k8sset.yaml
-3. testfiles/test.yaml
