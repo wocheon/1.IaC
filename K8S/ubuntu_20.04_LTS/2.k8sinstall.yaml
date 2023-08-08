@@ -1,0 +1,47 @@
+---
+ - name: install docker k8s
+   hosts: k8s
+   become: yes
+   gather_facts: no
+   tasks:
+   
+   - name: install docker
+     shell: |
+       apt update -y && apt upgrade -y
+       sudo apt-get install ca-certificates curl gnupg lsb-release
+       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+       echo \
+         "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+         $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+       sudo apt-get update ; sudo apt-get install docker-ce docker-ce-cli containerd.io
+       sudo mkdir /etc/docker
+       cat <<EOF | sudo tee /etc/docker/daemon.json
+       {
+         "exec-opts": ["native.cgroupdriver=systemd"],
+         "log-driver": "json-file",
+         "log-opts": {
+           "max-size": "100m"
+         },
+         "storage-driver": "overlay2"
+       }
+       EOF
+       sudo systemctl enable docker
+       sudo systemctl daemon-reload
+       sudo systemctl restart docker
+     register: output_1
+   - debug: var=output_1.stdout_lines  
+       
+   - name: install k8s
+     shell: |
+       sed -i 's/disabled_plugins/#disabled_plugins/g' /etc/containerd/config.toml
+       sudo apt-get update -y
+       sudo apt-get install -y apt-transport-https ca-certificates curl
+       sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+       echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+       echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+       sudo apt-get update -y
+       sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+       sudo apt-mark hold kubelet kubeadm kubectl
+     register: output_2
+   - debug: var=output_2.stdout_lines  
