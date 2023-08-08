@@ -4,6 +4,8 @@
 
 * CNI Plugin : Flannel
 
+* pod cidr : 10.244.0.0/16 ( Flannel Recommanded )
+
 * Default SETING
 - SELINUX OFF
 - FIREWALLD OFF
