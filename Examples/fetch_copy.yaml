@@ -1,0 +1,39 @@
+- name: fetch test 
+  hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create file
+      shell: cat /etc/hosts | grep $(hostname) > fc_testfile
+
+    - name: fetch file 
+      fetch:
+        src: "fc_testfile"
+        dest: "{{ playbook_dir }}/fc_testfile"
+        flat: yes
+
+    - name: fetch result
+      shell: |
+        rm -f fc_testfile
+        cat "{{ playbook_dir}}"/fc_testfile
+      register: output
+    - debug: var=output.stdout_lines
+
+
+- name: copy test 
+  hosts: worker
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: copy file 
+      copy:
+        src: "{{ playbook_dir }}/fc_testfile"
+        dest: "fc_testfile" 
+
+    - name: copy result
+      shell: |
+        cat fc_testfile
+        rm -f fc_testfile
+      register: output
+
+    - debug: var=output.stdout_lines
