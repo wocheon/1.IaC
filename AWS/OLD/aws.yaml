@@ -1,0 +1,82 @@
+---
+- name: aws ec2
+  hosts: localhost
+  become: yes
+  gather_facts: no
+  tasks:
+
+  - name : vpc
+    ec2_vpc_net:
+      name: vpc
+      cidr_block: 172.16.0.0/16
+      tags:
+        name: ansiblevpc
+      state: present
+    register: vpc_create_result
+
+  - name: igw
+    ec2_vpc_igw:
+      vpc_id: "{{ vpc_create_result.vpc.id }}"
+      state: present
+      tags:
+        name: ansibleigw
+    register: igw_result
+
+  - name: subnet1
+    ec2_vpc_subnet:
+      cidr: 172.16.1.0/24
+      vpc_id: "{{ vpc_create_result.vpc.id }}"
+      az: ap-northeast-2c
+      map_public: yes
+      state: present
+    register: subnet_create_result
+
+  - name: routing table
+    ec2_vpc_route_table:
+      vpc_id: "{{ vpc_create_result.vpc.id }}"
+      state: present
+      subnets: "{{ subnet_create_result.subnet.id }}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw_result.gateway_id }}"
+
+  - name: sg1
+    ec2_group:
+      name: subnet1_sg
+      vpc_id: "{{ vpc_create_result.vpc.id }}"
+      state: present
+      description: permit ssh, web
+      tags:
+        name: subnet1_sg
+      rules:
+      - proto: tcp
+        ports:
+        - 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+        - 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+        - 8080
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+        - 8009
+        cidr_ip: 0.0.0.0/0
+
+  - name: instance1
+    ec2:
+      key_name: aws-con2
+      instance_tags:
+        name: instance1
+      image: ami-086a3601cd7a83590 
+      group: subnet1_sg
+      wait: yes
+      count: 1
+      vpc_subnet_id: "{{ subnet_create_result.subnet.id }}"
+      assign_public_ip: yes
+      instance_tags:
+        name: instance1
+
