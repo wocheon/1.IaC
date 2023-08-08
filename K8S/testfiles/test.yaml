@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: master
-        image: nginx:1.10
+        image: nginx:1.12
         ports:
         - containerPort: 80
 
