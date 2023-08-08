@@ -7,33 +7,9 @@
     - name: kubeadm init 
       shell: |
          kubeadm init --pod-network-cidr=10.244.0.0/16 > "{{ playbook_dir }}"/token
-         echo 'source <(kubectl completion bash)' >> /etc/profile
+         kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/nul
       register: output
     - debug: var=output.stdout_lines    
-
-#   - name: get tokenfile
-#      fetch:
-#        src: "/root/token"
-#        dest: "{{ playbook_dir }}/log/token"
-#        flat: yes
-
-- name: apply flannel cni plugin
-  hosts: master
-  become: yes
-  gather_facts: no
-  tasks:
-#    - name: copy cni_setting.sh
-#     copy:
-#        src: "./script/cni_setting.sh"
-#        dest: "cni_setting.sh"
-
-    - name: apply CNI plugin
-      shell: sh cni_setting.sh 
-      args:
-        chdir: "{{ playbook_dir }}" 
-      register: output
-    - debug: var=output.stdout_lines    
-
 
 - name: send token
   hosts: worker
@@ -49,6 +25,21 @@
       shell: tail -2 token | sh
       register: output
     - debug: var=output.stdout_lines    
+
+
+- name: apply flannel cni plugin
+  hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
+
+    - name: apply CNI plugin
+      shell: sh cni_setting.sh 
+      args:
+        chdir: "{{ playbook_dir }}/script" 
+      register: output
+    - debug: var=output.stdout_lines    
+
 
 - name: set cni
   hosts: k8s
