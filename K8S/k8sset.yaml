@@ -7,10 +7,9 @@
     - name: create token
       shell: |
          kubeadm init --pod-network-cidr=10.244.0.0/16 > token
-         echo "source <(kubectl completion bash)" >> /etc/profile
-         source /etc/profile     
-
+         echo 'source <(kubectl completion bash)' >> /etc/profile
       register: output
+    - debug: var=output.stdout_lines    
 
     - name: get tokenfile
       fetch:
@@ -18,6 +17,11 @@
         dest: "token"
         flat: yes
 
+- name: apply flannel cni plugin
+  hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
     - name: copy cni_setting.sh
       copy:
         src: "cni_setting.sh"
@@ -25,9 +29,7 @@
 
     - name: apply CNI plugin
       shell: sh cni_setting.sh 
-      register: output
 
-    - debug: var=output.stdout_lines    
 
 - name: send token
   hosts: worker
@@ -38,6 +40,7 @@
       copy:
         src: "token"
         dest: "token"
+
     - name: join k8s cluster
       shell: tail -2 token | sh
       register: output
@@ -53,6 +56,11 @@
       shell: |
         mkdir -p /run/flannel/
         echo "FLANNEL_NETWORK=10.244.0.0/16" >> /run/flannel/subnet.env
-        echo "FLANNEL_SUBNET=10.244.0.1/24 " >> /run/flannel/subnet.env
+        echo "FLANNEL_SUBNET=10.244.1.0/24 " >> /run/flannel/subnet.env
         echo "FLANNEL_MTU=1450" >> /run/flannel/subnet.env
         echo "FLANNEL_IPMASQ=true" >> /run/flannel/subnet.env
+
+    - name: restart service
+      shell: |
+        systemctl restart containerd
+        systemctl restart kubelet
