@@ -2,7 +2,6 @@
 time=$(date '+%Y%m%d%H%M')
 branch=$(git branch | gawk '{print $2}')
 remote=$( git remote -v | grep push | gawk '{print $1}' )
-
 git add .
 
 if [ $? -eq 0 ]; then
