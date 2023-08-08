@@ -6,6 +6,5 @@ sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab ; swapoff -a ;
 sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 systemctl restart sshd
-apt-get install -y git curl wget ansible bash-completion
-echo "$(hostname -i) $(hostname)" >> /etc/hosts
 EOF
+apt-get install -y git curl wget ansible bash-completion
