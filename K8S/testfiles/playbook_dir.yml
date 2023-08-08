@@ -1,0 +1,16 @@
+---
+ - name: test
+   hosts: master
+   become: yes
+   gather_facts: no
+   tasks:
+     - name: test
+       shell: echo "playbook_dir test" >> "{{ playbook_dir }}"/testfile
+       register: output
+     - debug: var=output.stdout_lines
+
+     - name: get tokenfile
+       fetch:
+         src: "{{ playbook_dir }}/testfile"
+         dest: "{{ playbook_dir }}/testfile_2"
+         flat: yes
