@@ -7,4 +7,5 @@ sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_co
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 systemctl restart sshd
 EOF
+apt update -y && apt upgrade -y
 apt-get install -y git curl wget ansible bash-completion
