@@ -7,6 +7,11 @@
 * pod cidr : 10.244.0.0/16 ( Flannel Recommanded )
 	- need to check /run/flannel/subnet.env
 
+* Dashboard : 
+	- version : 2.0
+	- NodePort : 30001
+	- Username : Admin
+
 * Default SETING
 	- SELINUX OFF
 	- FIREWALLD OFF
@@ -35,6 +40,7 @@
 	1. k8sinstall.yaml
 	2. k8sset.yaml
 	3. testfiles/test.yaml
+	4. k8s_dashboard.sh
 
 * log 
 	- kubeadm init log 

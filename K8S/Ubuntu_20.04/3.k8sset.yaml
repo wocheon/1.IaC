@@ -21,7 +21,7 @@
     - name: kubeadm init 
       shell: |
          kubeadm init --pod-network-cidr=10.244.0.0/16 > "{{ playbook_dir }}/log/k8s_token_{{ date_val.stdout }}"
-         kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/nul
+         kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
       register: output
     - debug: var=output.stdout_lines    
 
