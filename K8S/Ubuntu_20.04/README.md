@@ -36,6 +36,6 @@
 	2. k8sset.yaml
 	3. testfiles/test.yaml
 
-*log 
+* log 
 	- kubeadm init log 
  	- logfile name : k8s_token_[date]
