@@ -8,18 +8,18 @@
 	- need to check /run/flannel/subnet.env
 
 * Default SETING
-- SELINUX OFF
-- FIREWALLD OFF
-- SWAP OFF
-- /proc/sys/net/bridge/bridge-nf-call-iptables => 1
-- /proc/sys/net/ipv4/ip_forward => 1
+	- SELINUX OFF
+	- FIREWALLD OFF
+	- SWAP OFF
+	- /proc/sys/net/bridge/bridge-nf-call-iptables => 1
+	- /proc/sys/net/ipv4/ip_forward => 1
 
 
 * Necessary Packages
-- git
-- curl
-- wget
-- ansible
+	- git
+	- curl
+	- wget
+	- ansible
 
 * Prepare 
 1. SSH check ( ssh-keygen > ssh-copy-id or copy public key to .ssh/authorized_keys )
