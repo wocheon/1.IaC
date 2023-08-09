@@ -4,7 +4,6 @@
    become: yes
    gather_facts: no
    tasks:
-   
    - name: install docker
      shell: |
        apt update -y
@@ -54,8 +53,6 @@
      register: output_1
    - debug: var=output_1.stdout_lines  
        
-
----
  - name: install k8s
    hosts: k8s
    become: yes

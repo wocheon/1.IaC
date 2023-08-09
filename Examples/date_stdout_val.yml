@@ -1,0 +1,25 @@
+---
+- name: test
+  become: true
+  gather_facts: no
+  hosts: master
+  tasks:
+    - name: set val
+      shell: date '+%y%m%d%H%M'
+      register: date
+
+    - name: print val
+      debug:
+        msg:
+          - "{{ date.stdout }}"
+
+
+    - name: create file
+      shell: |
+        echo test > "{{ playbook_dir }}/testfile_{{ date.stdout }}"
+
+
+    - name: copy file
+      copy:
+        src: "{{ playbook_dir }}/testfile_{{ date.stdout }}"
+        dest: "{{ playbook_dir }}/copy_testfile_{{ date.stdout }}"
