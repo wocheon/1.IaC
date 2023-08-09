@@ -32,7 +32,6 @@
 3. Ansible work check > ansible all -m ping 
 
 * Playbook order
-
 1. k8sinstall.yaml
 2. k8sset.yaml
 3. testfiles/test.yaml
