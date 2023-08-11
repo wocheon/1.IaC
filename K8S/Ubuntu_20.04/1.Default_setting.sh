@@ -8,4 +8,4 @@ sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/ssh
 systemctl restart sshd
 EOF
 apt update -y && apt upgrade -y
-apt-get install -y git curl wget ansible bash-completion
+apt-get install -y ipvsadm git curl wget ansible bash-completion
