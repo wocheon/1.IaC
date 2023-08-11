@@ -44,32 +44,24 @@
     - debug: var=output.stdout_lines    
 
 
-- name: apply flannel cni plugin
+- name: apply calico cni plugin
   hosts: master
   become: yes
   gather_facts: no
   tasks:
 
     - name: apply CNI plugin
-      shell: sh cni_setting.sh 
+      shell: sh cni_setting_calico.sh 
       args:
         chdir: "{{ playbook_dir }}/scripts" 
       register: output
     - debug: var=output.stdout_lines    
-
 
 - name: set cni
   hosts: k8s
   become: yes
   gather_facts: no
   tasks:
-    - name: set cni
-      shell: |
-        mkdir -p /run/flannel/
-        echo "FLANNEL_NETWORK=10.244.0.0/16" >> /run/flannel/subnet.env
-        echo "FLANNEL_SUBNET=10.244.1.0/24 " >> /run/flannel/subnet.env
-        echo "FLANNEL_MTU=1450" >> /run/flannel/subnet.env
-        echo "FLANNEL_IPMASQ=true" >> /run/flannel/subnet.env
 
     - name: restart service
       shell: |
