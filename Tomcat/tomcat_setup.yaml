@@ -1,0 +1,73 @@
+---
+ - name: Tomcat Setup
+   hosts: worker
+   become: yes
+   gather_facts: no
+   tasks:
+   - name: os chck
+     shell: |
+       cat /etc/*release* | grep ^ID= | sed 's/ID=//g' | sed 's/\"//g'
+     register: os_chck
+
+   - name: set fact
+     set_fact: os_chck={{ os_chck.stdout }}
+
+   - name: Install JDK - Ubuntu
+     shell: |
+       apt-get install -y openjdk-8-jdk wget
+     when: os_chck == "ubuntu"
+
+   - name: Install JDK - CentOS
+     shell: |
+       yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel wget
+     when: os_chck != "ubuntu"
+
+   - name: install tomcat
+     shell: |
+       wget https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.91/bin/apache-tomcat-8.5.91.tar.gz
+       tar -zxvf apache-tomcat-8.5.91.tar.gz
+       mv apache-tomcat-8.5.91/ tomcat; mv tomcat /usr/local/lib/
+
+   - name: Set env
+     shell: |
+       cat << EOF >> /etc/profile
+
+       JAVA_HOME=$(readlink -f /usr/bin/java | sed 's/\/bin\/java//g'| sed 's/\/jre//g' )
+       JRE_HOME=\$JAVA_HOME/jre
+       CATALINA_HOME=/usr/local/lib/tomcat
+       PATH=\$PATH:\$JAVA_HOME/bin:\$JRE_HOME/bin:\$CATALINA_HOME/bin
+       CLASSPATH=.:\$JAVA_HOME/lib/tools.jar:\$CATALINA_HOME/lib/jsp-api.jar:\$CATALINA_HOME/lib/servlet-api.jar
+
+       export JAVA_HOME
+       export JRE_HOME
+       export CLASSPATH CATALINA_HOME
+       EOF
+
+   - name: source /etc/profile
+     shell: source /etc/profile
+     args:
+       executable: /bin/bash
+
+   - name: Set tomcat.service
+     shell: |
+       cat << EOF > /etc/systemd/system/tomcat.service
+       [Unit]
+       Description=tomcat
+       After=network.target syslog.target
+
+       [Service]
+       Type=forking
+       Environment=/usr/local/lib/tomcat
+       User=root
+       Group=root
+       ExecStart=/usr/local/lib/tomcat/bin/startup.sh
+       ExecStop=/usr/local/lib/tomcat/bin/shutdown.sh
+
+       [Install]
+       WantedBy=multi-user.target
+       EOF
+
+   - name: Start tomcat.service
+     shell: |
+       systemctl deamon-reload
+       systemctl enable tomcat --now

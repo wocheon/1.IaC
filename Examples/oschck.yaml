@@ -1,0 +1,38 @@
+---
+ - name: Tomcat Setup
+   hosts: all
+   become: yes
+   gather_facts: no
+   tasks:
+   - name: os chck
+     shell: |
+       cat /etc/*release* | grep ^ID= | sed 's/ID=//g' | sed 's/\"//g'
+     register: os_chck
+
+   - name: set fact
+     set_fact: os_chck={{ os_chck.stdout }}
+
+   - name: print val
+     debug:
+       msg:
+       - "{{ os_chck }}"
+
+   - name: os chck ubuntu
+     shell: |
+       echo "Ubuntu"
+     when: os_chck == "ubuntu"
+     register: res_1
+
+   - name: os chck cent
+     shell: |
+       echo "CentOS"
+     when: os_chck != "ubuntu"
+     register: res_2
+
+   - name: debug_ubun
+     debug: var=res_1.stdout_lines
+     when : os_chck == "ubuntu"
+
+   - name: debug_cent
+     debug: var=res_2.stdout_lines
+     when : os_chck != "ubuntu"
