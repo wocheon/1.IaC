@@ -1,0 +1,15 @@
+- name: var test
+  hosts: all
+  become: true
+  gather_facts: no
+#  remote_user: root
+  vars:
+   var1: test
+
+  tasks:
+    - name: echovar
+      shell: |
+        echo "{{ var1 }}"
+      register: res
+
+    - debug: var=res.stdout
