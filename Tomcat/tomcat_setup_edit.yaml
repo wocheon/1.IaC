@@ -1,0 +1,52 @@
+ - name: Tomcat Setup
+   hosts: master
+   become: yes
+   gather_facts: no
+   tasks:
+   - name: os chck
+     shell: |
+       cat /etc/*release* | grep ^ID= | sed 's/ID=//g' | sed 's/\"//g'
+     register: os_chck
+
+   - name: set fact
+     set_fact: os_chck={{ os_chck.stdout }}
+
+   - name: Install JDK - Ubuntu
+     apt:
+       name: openjdk-8-jdk
+       state: present
+     when: os_chck == "ubuntu"
+
+   - name: Install JDK_1 - CentOS
+     yum:
+      name: java-1.8.0-openjdk
+      state: present
+     when: os_chck != "ubuntu"
+
+   - name: Install JDK_2 - CentOS
+     yum:
+      name: java-1.8.0-openjdk-devel
+      state: present
+     when: os_chck != "ubuntu"
+
+   - name: Install wget
+     yum:
+       name: wget
+       state: present
+
+   - name: install tomcat_1
+     get_url:
+       url: https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.93/bin/apache-tomcat-8.5.93.tar.gz
+       dest: /root/tomcat.tar.gz
+
+   - name: install tomcat_2
+     unarchive:
+       src: /root/tomcat.tar.gz
+       dest: /root/
+       remote_src: yes
+
+   - name: install tomcat_3
+     copy:
+       src: /root/apache-tomcat-8.5.93
+       dest: /usr/local/lib/tomcat
+       remote_src: yes
