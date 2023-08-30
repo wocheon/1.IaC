@@ -74,4 +74,28 @@
      register: sh_res
      changed_when: sh_res.rc != 0
 
+   - name: add env
+     blockinfile:
+      path: /etc/profile
+      block: |
+        [Unit]
+        Description=tomcat
+        After=network.target syslog.target
+
+        [Service]
+        Type=forking
+        Environment=/usr/local/lib/tomcat
+        User=root
+        Group=root
+        ExecStart=/usr/local/lib/tomcat/bin/startup.sh
+        ExecStop=/usr/local/lib/tomcat/bin/shutdown.sh
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+
+   - name: Start tomcat.service
+     shell: |
+       systemctl deamon-reload
+       systemctl enable tomcat --now
 
