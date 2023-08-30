@@ -1,0 +1,19 @@
+- name: stat
+  become: true
+  gather_facts: no
+  hosts: master
+  tasks:
+    - name: stat test
+      stat:
+        path: /usr/bin/java
+      register: link
+
+    - name: sed link
+      shell:
+        echo "{{ link.stat.lnk_source }}" | sed 's/\/bin\/java//g'| sed 's/\/jre//g'
+      register: res
+
+    - name: check res
+      debug:
+        msg:
+          - "{{ res.stdout }}"
