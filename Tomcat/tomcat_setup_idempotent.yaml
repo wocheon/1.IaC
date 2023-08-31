@@ -2,6 +2,9 @@
    hosts: master
    become: yes
    gather_facts: no
+   vars:
+     tomcat_ver: 8.5.93
+
    tasks:
    - name: os chck
      shell: |
@@ -27,7 +30,7 @@
 
    - name: install tomcat_1
      get_url:
-       url: https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.93/bin/apache-tomcat-8.5.93.tar.gz
+       url: "https://dlcdn.apache.org/tomcat/tomcat-8/v{{ tomcat_ver }}/bin/apache-tomcat-{{ tomcat_ver }}.tar.gz"
        dest: /root/tomcat.tar.gz
 
    - name: install tomcat_2
@@ -38,7 +41,7 @@
 
    - name: install tomcat_3
      copy:
-       src: /root/apache-tomcat-8.5.93
+       src: "/root/apache-tomcat-{{ tomcat_ver }}/"
        dest: /usr/local/lib/tomcat
        remote_src: yes
 
@@ -57,11 +60,11 @@
      blockinfile:
       path: /etc/profile
       block: |
-        JAVA_HOME="{{ res.stdout  }}"
-        JRE_HOME=\$JAVA_HOME/jre
+        "JAVA_HOME={{ res.stdout  }}"
+        JRE_HOME=$JAVA_HOME/jre
         CATALINA_HOME=/usr/local/lib/tomcat
-        PATH=\$PATH:\$JAVA_HOME/bin:\$JRE_HOME/bin:\$CATALINA_HOME/bin
-        CLASSPATH=.:\$JAVA_HOME/lib/tools.jar:\$CATALINA_HOME/lib/jsp-api.jar:\$CATALINA_HOME/lib/servlet-api.jar
+        PATH=\$PATH:$JAVA_HOME/bin:$JRE_HOME/bin:$CATALINA_HOME/bin
+        CLASSPATH=.:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib/jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar
 
         export JAVA_HOME
         export JRE_HOME
@@ -74,10 +77,12 @@
      register: sh_res
      changed_when: sh_res.rc != 0
 
-   - name: add env
+
+   - name: add service
      blockinfile:
-      path: /etc/profile
-      block: |
+       path: /etc/systemd/system/tomcat.service
+       create: yes
+       block: |
         [Unit]
         Description=tomcat
         After=network.target syslog.target
@@ -92,10 +97,9 @@
 
         [Install]
         WantedBy=multi-user.target
-        EOF
 
    - name: Start tomcat.service
-     shell: |
-       systemctl deamon-reload
-       systemctl enable tomcat --now
-
+     systemd:
+       name: tomcat
+       daemon_reload: yes
+       enabled: yes
