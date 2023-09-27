@@ -4,6 +4,9 @@
 - ansible tower 의 오픈소스 버전으로,
 ansible 을 GUI 로 관리하고, api 로 제어할 수 있도록 해주는 시스템.
 
+## AWX 공식매뉴얼
+[https://docs.ansible.com/ansible-tower/latest/html/userguide/](https://docs.ansible.com/ansible-tower/latest/html/userguide/)
+
 ### 최소 사양 
  - CPU 4 코어 이상, 메모리 8GB 이상
 
@@ -107,13 +110,13 @@ pip-3 install docker docker-compose
 # 오류나면 다시 한번 돌려보기
 ansible-playbook -i inventory install.yml
 ```
-
-### AWX 접속 
+### AWX 접속 확인
 - http:[awx서버 ip]
 - 포트기본값 : 80 (inventory파일로 변경가능)
 - admin/admin
 
 
+ ---
 ## AWX 메뉴
 - AWX의 메뉴는 다음과 같이 구성되어있음
 ### View
