@@ -1,6 +1,6 @@
 ---
  - name: test
-   hosts: k8s
+   hosts: all
    become: yes
    gather_facts: no
    tasks:
