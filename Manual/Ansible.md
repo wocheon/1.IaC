@@ -369,3 +369,39 @@ ansible-doc file -s
     when: ""
     tags: chmod_secpasswd
 ```    
+
+## Ansible-playbook vars_files 설정
+- vars_file을 따로 생성하여 관리 할수 있음
+
+>vi vars_file.yml
+```yml
+pkg_nm: openjdk-8-jdk
+```
+
+>vi tomcat-setup.yml
+```yml
+
+- name: Tomcat Setup
+  hosts: master
+  remote_user: ciw0707
+  become: yes
+  gather_facts: no
+  vars_file: vars_file.yml
+    
+  tasks:
+  - name: os chck
+    shell: |
+      cat /etc/*release* | grep ^ID= | sed 's/ID=//g' | sed 's/\"//g'
+    register: os_chck
+
+  - name: set fact
+    set_fact: os_chck={{ os_chck.stdout }}
+
+  - name: Install JDK - Ubuntu
+    apt:
+      name: {{ pkg_nm }}
+      state: present
+    when: os_chck == "ubuntu"
+```
+
+
