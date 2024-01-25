@@ -1,0 +1,23 @@
+#### gcp service-account file ###
+gcp_cred_kind: serviceaccount
+gcp_cred_file: ./service-account.json
+
+### GCP Project & Regions ###
+gcp_project: gcp-in-ca
+region: "asia-northeast1"
+zone: "asia-northeast1-a"
+
+###disk###
+disk_name : test-disk-01
+disk_size : 20
+disk_snapshot: projects/gcp-in-ca/global/snapshots/jenkins-snapshot-1
+disk_state : absent
+
+###GCE_VM###
+vm_state: absent
+vm_name : test-01
+machine_type : e2-micro
+
+###GCE_VM_Network###
+network : projects/gcp-in-ca/global/networks/test-vpc-1
+subnetwork : projects/gcp-in-ca/regions/asia-northeast1/subnetworks/test-vpc-sub-03

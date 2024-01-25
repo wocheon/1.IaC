@@ -1,0 +1,44 @@
+- name: de an instance
+  hosts: localhost
+  gather_facts: false
+  vars_files: var_list.yaml
+
+  tasks:
+  - name: delvm
+    gcp_compute_instance:
+      zone: "{{ zone }}"
+      project: "{{ gcp_project }}"
+      auth_kind: "{{ gcp_cred_kind }}"
+      service_account_file: "{{ gcp_cred_file }}"
+      state: "{{ vm_state }}"
+      name: "{{ vm_name }}"
+      machine_type: "{{ machine_type }}"
+      labels:
+        user: wocheon07
+      network_interfaces:
+        - network:
+            selfLink: "{{ network }}"
+          subnetwork:
+            selfLink: "{{ subnetwork }}"
+          access_configs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+      scopes:
+        - https://www.googleapis.com/auth/compute
+
+  - name: delete disk
+    gcp_compute_disk:
+        name: "{{ disk_name }}"
+        size_gb: "{{ disk_size }}"
+        source_snapshot:
+          selfLink: "{{ disk_snapshot }}"
+        zone: "{{ zone }}"
+        project: "{{ gcp_project }}"
+        auth_kind: "{{ gcp_cred_kind }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        scopes:
+          - https://www.googleapis.com/auth/compute
+        state: "{{ disk_state }}"
+        labels:
+          user: wocheon07
+    register: disk
