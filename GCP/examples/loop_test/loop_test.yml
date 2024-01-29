@@ -1,0 +1,24 @@
+- name: ansible loop - 2
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - var_list.yml
+
+  tasks:
+  - name: vm_name + IP
+    debug:
+      msg: "{{ item.vm_name }} / {{ item.vm_ip }}"
+    with_items:
+      - "{{ vms }}"
+
+  - name: disks
+    debug:
+      msg: "{{ item.disk_name }}"
+    with_items:
+      - "{{ vms }}"
+
+  - name: disks
+    debug:
+      msg: "{{ item.vm_name }} / {{ item.vm_ip }} / {{ item.disk_name }}"
+    with_items:
+      - "{{ vms }}"

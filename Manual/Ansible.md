@@ -404,4 +404,202 @@ pkg_nm: openjdk-8-jdk
     when: os_chck == "ubuntu"
 ```
 
+## Ansible 내에서 조건문(when) 구문 사용
+- playbook 내에서 조건에 따라 task를 실행할 필요가 있는경우 when을 사용하여 구현 가능
 
+```
+- name: install packages
+  hosts: master
+  become: yes
+  gather_facts: no
+  vars:
+    pkg_nm: httpd
+
+  tasks:
+  - name: os chck
+    shell: |
+      cat /etc/*release* | grep ^ID= | sed 's/ID=//g' | sed 's/\"//g'
+    register: os_chck
+
+  - name: set fact
+    set_fact: os_chck={{ os_chck.stdout }}
+
+  - name: Install PKG - Ubuntu
+    apt:
+      name: "{{ pkg_nm }}"
+      state: present
+    when: os_chck == "ubuntu"
+
+  - name: Install PKG - Centos
+    yum:
+      name: "{{ pkg_nm }}"
+      state: present
+    when: os_chck != "ubuntu"
+
+```
+
+- 실행결과
+```bash
+[root@master-01 ~]# ansible-playbook install_pkg.yml
+
+PLAY [install packages] **************************************************************
+
+TASK [os chck] ***********************************************************************
+changed: [192.168.3.100]
+
+TASK [set fact] **********************************************************************
+ok: [192.168.3.100]
+
+TASK [Install PKG - Ubuntu] **********************************************************
+skipping: [192.168.3.100]
+
+TASK [Install PKG - Centos] **********************************************************
+changed: [192.168.3.100]
+
+PLAY RECAP ***************************************************************************
+192.168.3.100              : ok=3    changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0
+
+```
+
+
+## Ansible 내에서 loop 구문 사용
+- 리스트 반복문을 통해 다음과 같이 사용이가능
+
+```yml
+- name: ansible loop - 1
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - master-01
+      - worker-01
+      - worker-02
+      - worker-03
+      - worker-04
+      - worker-05
+
+  tasks:
+  - name: vm_name
+    debug:
+      msg: "{{ item }}"
+    with_items:
+      "{{ vms }}"
+
+- name: ansible loop - 2
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - vm_name: master-01
+        vm_ip : 192.168.3.100
+      - vm_name: worker-01
+        vm_ip : 192.168.3.101
+      - vm_name: worker-02
+        vm_ip : 192.168.3.102
+      - vm_name: worker-03
+        vm_ip : 192.168.3.103
+      - vm_name: worker-04
+        vm_ip : 192.168.3.104
+      - vm_name: worker-05
+        vm_ip : 192.168.3.105
+
+  tasks:
+  - name: vm_name + IP
+    debug:
+      msg: "{{ item.vm_name }} / {{ item.vm_ip }}"
+    with_items:
+      "{{ vms }}"
+
+- name: ansible loop - 3
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - master-01
+      - worker-01
+      - worker-02
+      - worker-03
+      - worker-04
+      - worker-05
+  vars_files: var_list.yaml
+
+  tasks:
+  - name: vm_name
+    debug:
+      msg: "{{ item }} : {{ vm_state }}"
+    with_items:
+      "{{ vms }}"
+```
+
+- 실행결과
+
+```bash
+PLAY [ansible loop - 1] **************************************************************
+
+TASK [vm_name] ***********************************************************************
+ok: [127.0.0.1] => (item=master-01) => {
+    "msg": "master-01"
+}
+ok: [127.0.0.1] => (item=worker-01) => {
+    "msg": "worker-01"
+}
+ok: [127.0.0.1] => (item=worker-02) => {
+    "msg": "worker-02"
+}
+ok: [127.0.0.1] => (item=worker-03) => {
+    "msg": "worker-03"
+}
+ok: [127.0.0.1] => (item=worker-04) => {
+    "msg": "worker-04"
+}
+ok: [127.0.0.1] => (item=worker-05) => {
+    "msg": "worker-05"
+}
+
+PLAY [ansible loop - 2] **************************************************************
+
+TASK [vm_name + IP] ******************************************************************
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'vm_ip': u'192.168.3.100'}) => {
+    "msg": "master-01 / 192.168.3.100"
+}
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'vm_ip': u'192.168.3.101'}) => {
+    "msg": "worker-01 / 192.168.3.101"
+}
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'vm_ip': u'192.168.3.102'}) => {
+    "msg": "worker-02 / 192.168.3.102"
+}
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'vm_ip': u'192.168.3.103'}) => {
+    "msg": "worker-03 / 192.168.3.103"
+}
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'vm_ip': u'192.168.3.104'}) => {
+    "msg": "worker-04 / 192.168.3.104"
+}
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'vm_ip': u'192.168.3.105'}) => {
+    "msg": "worker-05 / 192.168.3.105"
+}
+
+PLAY [ansible loop - 3] **************************************************************
+
+TASK [vm_name] ***********************************************************************
+ok: [127.0.0.1] => (item=master-01) => {
+    "msg": "master-01 : present"
+}
+ok: [127.0.0.1] => (item=worker-01) => {
+    "msg": "worker-01 : present"
+}
+ok: [127.0.0.1] => (item=worker-02) => {
+    "msg": "worker-02 : present"
+}
+ok: [127.0.0.1] => (item=worker-03) => {
+    "msg": "worker-03 : present"
+}
+ok: [127.0.0.1] => (item=worker-04) => {
+    "msg": "worker-04 : present"
+}
+ok: [127.0.0.1] => (item=worker-05) => {
+    "msg": "worker-05 : present"
+}
+
+PLAY RECAP ***************************************************************************
+127.0.0.1                  : ok=3    changed=0    unreachable=0    failed=0    skipped            =0    rescued=0    ignored=0
+```

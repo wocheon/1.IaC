@@ -1,0 +1,25 @@
+vms:
+  - vm_name: master-01
+    vm_ip : 192.168.3.100
+    disk_name: master-001
+    disk_size: 20
+
+  - vm_name: worker-01
+    vm_ip : 192.168.3.101
+    disk_name: worker-001
+
+  - vm_name: worker-02
+    vm_ip : 192.168.3.102
+    disk_name: worker-002
+
+  - vm_name: worker-03
+    vm_ip : 192.168.3.103
+    disk_name: worker-003
+
+  - vm_name: worker-04
+    vm_ip : 192.168.3.104
+    disk_name: worker-004
+
+  - vm_name: worker-05
+    vm_ip : 192.168.3.105
+    disk_name: worker-005
