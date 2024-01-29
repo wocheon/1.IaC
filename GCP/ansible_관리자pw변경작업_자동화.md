@@ -6,16 +6,21 @@
 - 작업 대상 서버가 다수이므로 ansible,expect등의 자동화 툴을 사용하여 작업
 
 - 패스워드 변경 작업 시 root권한이 필요함
+
+- root 접근은 가능하나 서버간 root로 ssh 접속은 불가능
+    - sshd_config > `PermitrootLogin no`
     
 - sudo 권한이 있는경우 sudo로 처리하면 되나 계정 정책상 sudo가 불가능한 상황임
     - become 옵션 사용불가
     
-- OS 로그인이 되어있는 상태이므로 ansible에서 root계정 사용이 불가능한 상황
+- GCP OS 로그인 옵션으로 인해 ansible에서 root계정 사용이 불가능한 상황으로 가정
+
     - OS 로그인 옵션으로 인해 root계정의 authorized_key파일 사용 불가능
 
 - 자동으로 root 권한을 획득후에 작업을 진행하도록 expect 스크립트를 작성하여 사용
     - 멱등성 보장이 어렵다는 단점이 존재
     - 작업시 log 파일을 생성하여 작업 내역 및 결과를 기록
+
     
 ### 필요 패키지 목록
 - Ansible
@@ -75,6 +80,7 @@
 ### 계정 정보 
 - 일반 사용자 계정
     - 계정명 : wocheon07
+    - 해당계정으로 ssh 접근 설정    
 
 - 시스템 관리자 계정 (비밀번호 변경 대상)
     - 계정명 : sysadm
@@ -172,27 +178,27 @@ Number of days of warning before password expires       : 7
 ```
 
 ### ssh 공개키 복사 
-- master 서버의 root 공개키를 각 서버의 sysadm에 등록
-    - master도 작업 필요
+- master 서버의 root 공개키를 각 서버의 개인계정에 등록
+    - master 서버도 작업 필요
 
 - ssh-copy-id가 불가하므로 수동으로 입력 
 
 ```bash
-[root@master-01 sysadm]#  cat /root/.ssh/id_rsa.pub
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsqnZAQKBtydbn040mWetqauZ6Kx+a7r5B4AH4gv2iPmRpSJdBsphKioxaeQ0F9+h5DMY5xfEQIW2PXc7UM9+we2OHf0pirgA1QTXPOoXBmd31Z1dMWMlIBIpXjoyLZ79XHRk9r0U7hoO9/zAUrG49csq+bfRPYZG8GtQcXnRa7mVeapTxIHeHmoiEXTOMx4qG/8iR/BfWjLn55RXXwHDHgq4pm+3NBCiZzV+EgMKLppP2tM4x6Dq8WZT5yxbTGjSypfYULiLB5dPLx2t3KuiCnQBRephhb9pzcrxQAeh7AHI5EmRs8o5W6bCK6iwTPmnRHqeIvWc9Xo2gJLqYXSZd root@gcp-ansible-test
+[root@master-01 wocheon07]#  cat /root/.ssh/id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsqnZAQKBtydbn040mWetqauZ6Kx+a7r5B4AH4gv2iPmRpSJdBsphKioxaeQ0F9+h5DMY5xfEQIW2PXc7UM9+we2OHf0pirgA1QTXPOoXBmd31Z1dMWMlIBIpXjoyLZ79XHRk9r0U7hoO9/zAUrG49csq+bfRPYZG8GtQcXnRa7mVeapTxIHeHmoiEXTOMx4qG/8iR/BfWjLn55RXXwHDHgq4pm+3NBCiZzV+EgMKLppP2tM4x6Dq8WZT5yxbTGjSypfYULiLB5dPLx2t3KuiCnQBRephhb9pzcrxQAeh7AHI5EmRs8o5W6bCK6iwTPmnRHqeIvWc9Xo2gJLqYXSZd root@master-01
 
 
-[root@master-01 sysadm]# mkdir /home/sysadm/.ssh; cd /home/sysadm/.ssh
+[root@master-01 wocheon07]# mkdir /home/wocheon07/.ssh; cd /home/sysadm/.ssh
 
-[root@master-01 sysadm]# echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsqnZAQKBtydbn040mWetqauZ6Kx+a7r5B4AH4gv2iPmRpSJdBsphKioxaeQ0F9+h5DMY5xfEQIW2PXc7UM9+we2OHf0pirgA1QTXPOoXBmd31Z1dMWMlIBIpXjoyLZ79XHRk9r0U7hoO9/zAUrG49csq+bfRPYZG8GtQcXnRa7mVeapTxIHeHmoiEXTOMx4qG/8iR/BfWjLn55RXXwHDHgq4pm+3NBCiZzV+EgMKLppP2tM4x6Dq8WZT5yxbTGjSypfYULiLB5dPLx2t3KuiCnQBRephhb9pzcrxQAeh7AHI5EmRs8o5W6bCK6iwTPmnRHqeIvWc9Xo2gJLqYXSZd root@gcp-ansible-test" >  /home/sysadm/.ssh/authorized_keys
+[root@master-01 wocheon07]# echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsqnZAQKBtydbn040mWetqauZ6Kx+a7r5B4AH4gv2iPmRpSJdBsphKioxaeQ0F9+h5DMY5xfEQIW2PXc7UM9+we2OHf0pirgA1QTXPOoXBmd31Z1dMWMlIBIpXjoyLZ79XHRk9r0U7hoO9/zAUrG49csq+bfRPYZG8GtQcXnRa7mVeapTxIHeHmoiEXTOMx4qG/8iR/BfWjLn55RXXwHDHgq4pm+3NBCiZzV+EgMKLppP2tM4x6Dq8WZT5yxbTGjSypfYULiLB5dPLx2t3KuiCnQBRephhb9pzcrxQAeh7AHI5EmRs8o5W6bCK6iwTPmnRHqeIvWc9Xo2gJLqYXSZd root@gcp-master-01" >  /home/wocheon07/.ssh/authorized_keys
 
 
 [root@master-01 .ssh]# chmod 600 authorized_keys
-[root@master-01 .ssh]# chown sysadm.sysadm authorized_keys
+[root@master-01 .ssh]# chown wocheon07.wocheon07 authorized_keys
 
 [root@master-01 .ssh]# ll
 total 4
--rw------- 1 sysadm sysadm 403 Jan 26 07:42 authorized_keys
+-rw------- 1 wocheon07 wocheon07 403 Jan 26 07:42 authorized_keys
 ```
 
 - 나머지 서버에도 동일하게 작업 진행
@@ -204,36 +210,41 @@ total 4
 - ssh 키를 복사했으므로 패스워드 입력 없이 sysadm 접근 확인
 
 ```bash
-[root@master-01 ~]# ssh sysadm@192.168.3.100
-Last login: Fri Jan 26 07:47:59 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
-[sysadm@master-01 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.100
+Last login: Mon Jan 29 00:39:25 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
+[wocheon07@master-01 ~]$ logout
 Connection to 192.168.3.100 closed.
-[root@master-01 ~]# ssh sysadm@192.168.3.101
-[sysadm@worker-01 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.101
+Last login: Mon Jan 29 00:41:28 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
+[wocheon07@worker-01 ~]$ logout
 Connection to 192.168.3.101 closed.
-[root@master-01 ~]# ssh sysadm@192.168.3.102
-[sysadm@worker-02 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.102
+Last login: Thu Jan 25 08:06:52 2024 from 165.243.5.20
+[wocheon07@worker-02 ~]$ logout
 Connection to 192.168.3.102 closed.
-[root@master-01 ~]# ssh sysadm@192.168.3.103
-[sysadm@worker-03 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.103
+Last login: Thu Jan 25 08:06:52 2024 from 165.243.5.20
+[wocheon07@worker-03 ~]$ logout
 Connection to 192.168.3.103 closed.
-[root@master-01 ~]# ssh sysadm@192.168.3.104
-[sysadm@worker-04 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.104
+Last login: Thu Jan 25 08:06:52 2024 from 165.243.5.20
+[wocheon07@worker-04 ~]$ logout
 Connection to 192.168.3.104 closed.
-[root@master-01 ~]# ssh sysadm@192.168.3.105
-[sysadm@worker-05 ~]$ logout
+[root@master-01 ~]# ssh wocheon07@192.168.3.105
+Last login: Thu Jan 25 08:06:52 2024 from 165.243.5.20
+[wocheon07@worker-05 ~]$ logout
 Connection to 192.168.3.105 closed.
 ```
 
 ### ansible remote user 설정 
-- ansble을 통해 명령을 수행할 계정을 sysadm으로 설정
+- ansble을 통해 명령을 수행할 계정을 wocheon07으로 설정
 
 >vi /etc/ansible/ansible.cfg
 ```bash
 # 해당 부분 주석 해제 후 root > sysadm으로 변경
 # default user to use for playbooks if user is not specified
 # (/usr/bin/ansible will use current user as default)
-remote_user = sysadm
+remote_user = wocheon07
 ```
 
 
@@ -343,7 +354,6 @@ expect eof
 EOF
 
 exit
-
 ```
 
 ## 4. 패스워드 변경용 스크립트 작성
@@ -382,7 +392,7 @@ fi
 
 exec >> /dev/tty
 
-chown sysadm.sysadm chpasswd.log
+chown wocheon07.wocheon07 chpasswd.log
 ```
 
 
@@ -548,32 +558,32 @@ password_rule: '#sysadm_AbC@'
 ```
 
 ## 7. 실행결과 확인
-- ansible-playbook 01.copy_scirpt_files.yml
+- ansible-playbook - 01.copy_scirpt_files.yml
 ```bash
 [root@master-01 gcp-ansible]# ansible-playbook 01.copy_scirpt_files.yml
 
 PLAY [task1 - copy script files] *****************************************************************************************************************************************************************************
 
 TASK [copy expect scirpt] ************************************************************************************************************************************************************************************
-changed: [192.168.3.102]
-changed: [192.168.3.103]
 changed: [192.168.3.101]
 changed: [192.168.3.104]
+changed: [192.168.3.103]
+changed: [192.168.3.102]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
 TASK [copy scirpt file_1 - chpasswd] *************************************************************************************************************************************************************************
+changed: [192.168.3.102]
 changed: [192.168.3.104]
 changed: [192.168.3.103]
-changed: [192.168.3.102]
 changed: [192.168.3.101]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
 TASK [copy scirpt file_2 - sysadm_login_test.sh] *************************************************************************************************************************************************************
 changed: [192.168.3.102]
-changed: [192.168.3.101]
 changed: [192.168.3.103]
+changed: [192.168.3.101]
 changed: [192.168.3.104]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
@@ -585,9 +595,11 @@ PLAY RECAP *********************************************************************
 192.168.3.103              : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 192.168.3.104              : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 192.168.3.105              : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
 ```
 
-- ansible-playbook 02.expect_run_scirpt.yml
+- ansible-playbook - 02.expect_run_scirpt.yml
 
 ```bash
 [root@master-01 gcp-ansible]# ansible-playbook 02.expect_run_scirpt.yml
@@ -595,35 +607,20 @@ PLAY RECAP *********************************************************************
 PLAY [task2 - run script by expect script] *******************************************************************************************************************************************************************
 
 TASK [run script by expect_script] ***************************************************************************************************************************************************************************
-changed: [192.168.3.103]
 changed: [192.168.3.104]
-changed: [192.168.3.102]
 changed: [192.168.3.101]
+changed: [192.168.3.103]
+changed: [192.168.3.102]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
 TASK [debug] *************************************************************************************************************************************************************************************************
-ok: [192.168.3.101] => {
-    "res.stdout_lines": [
-        "spawn su",
-        "Password: ",
-        "\u001b]0;sysadm@worker-01:/home/sysadm\u0007\u001b[?1034h[root@worker-01 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
-        "exit"
-    ]
-}
 ok: [192.168.3.100] => {
     "res.stdout_lines": [
         "spawn su",
         "Password: ",
-        "\u001b]0;sysadm@master-01:/home/sysadm\u0007\u001b[?1034h[root@master-01 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
-        "exit"
-    ]
-}
-ok: [192.168.3.104] => {
-    "res.stdout_lines": [
-        "spawn su",
-        "Password: ",
-        "\u001b]0;sysadm@worker-04:/home/sysadm\u0007\u001b[?1034h[root@worker-04 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
+        "\u001b]0;wocheon07@master-01:/home/wocheon07\u0007\u001b[?1034h[root@master-01 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
         "exit"
     ]
 }
@@ -631,15 +628,8 @@ ok: [192.168.3.103] => {
     "res.stdout_lines": [
         "spawn su",
         "Password: ",
-        "\u001b]0;sysadm@worker-03:/home/sysadm\u0007\u001b[?1034h[root@worker-03 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
-        "exit"
-    ]
-}
-ok: [192.168.3.102] => {
-    "res.stdout_lines": [
-        "spawn su",
-        "Password: ",
-        "\u001b]0;sysadm@worker-02:/home/sysadm\u0007\u001b[?1034h[root@worker-02 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
+        "\u001b]0;wocheon07@worker-03:/home/wocheon07\u0007\u001b[?1034h[root@worker-03 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
         "exit"
     ]
 }
@@ -647,7 +637,35 @@ ok: [192.168.3.105] => {
     "res.stdout_lines": [
         "spawn su",
         "Password: ",
-        "\u001b]0;sysadm@worker-05:/home/sysadm\u0007\u001b[?1034h[root@worker-05 sysadm]# sh /home/sysadm/chpasswd.sh '#sysadm_AbC@'; exit;",
+        "\u001b]0;wocheon07@worker-05:/home/wocheon07\u0007\u001b[?1034h[root@worker-05 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
+        "exit"
+    ]
+}
+ok: [192.168.3.101] => {
+    "res.stdout_lines": [
+        "spawn su",
+        "Password: ",
+        "\u001b]0;wocheon07@worker-01:/home/wocheon07\u0007\u001b[?1034h[root@worker-01 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
+        "exit"
+    ]
+}
+ok: [192.168.3.102] => {
+    "res.stdout_lines": [
+        "spawn su",
+        "Password: ",
+        "\u001b]0;wocheon07@worker-02:/home/wocheon07\u0007\u001b[?1034h[root@worker-02 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
+        "exit"
+    ]
+}
+ok: [192.168.3.104] => {
+    "res.stdout_lines": [
+        "spawn su",
+        "Password: ",
+        "\u001b]0;wocheon07@worker-04:/home/wocheon07\u0007\u001b[?1034h[root@worker-04 wocheon07]# sh /home/wocheon07/chpasswd.sh '#sysadm_AbC@'; exit; ",
+        "\u001b[A\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[C\u001b[K;",
         "exit"
     ]
 }
@@ -661,7 +679,7 @@ PLAY RECAP *********************************************************************
 192.168.3.105              : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
-- ansible-playbook 03.check_result.yml
+- ansible-playbook - 03.check_result.yml
 
 ```bash
 [root@master-01 gcp-ansible]# ansible-playbook 03.check_result.yml
@@ -669,10 +687,10 @@ PLAY RECAP *********************************************************************
 PLAY [task3 - check password change result] ******************************************************************************************************************************************************************
 
 TASK [cat password_change_log] *******************************************************************************************************************************************************************************
+changed: [192.168.3.103]
+changed: [192.168.3.102]
 changed: [192.168.3.101]
 changed: [192.168.3.104]
-changed: [192.168.3.102]
-changed: [192.168.3.103]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
@@ -682,8 +700,8 @@ ok: [192.168.3.100] => {
         "======================================",
         "Server : master-01 User : sysadm",
         "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
         "======================================"
     ]
 }
@@ -692,18 +710,8 @@ ok: [192.168.3.102] => {
         "======================================",
         "Server : worker-02 User : sysadm",
         "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
-        "======================================"
-    ]
-}
-ok: [192.168.3.105] => {
-    "res_1.stdout_lines": [
-        "======================================",
-        "Server : worker-05 User : sysadm",
-        "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
         "======================================"
     ]
 }
@@ -712,18 +720,8 @@ ok: [192.168.3.101] => {
         "======================================",
         "Server : worker-01 User : sysadm",
         "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
-        "======================================"
-    ]
-}
-ok: [192.168.3.104] => {
-    "res_1.stdout_lines": [
-        "======================================",
-        "Server : worker-04 User : sysadm",
-        "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
         "======================================"
     ]
 }
@@ -732,18 +730,38 @@ ok: [192.168.3.103] => {
         "======================================",
         "Server : worker-03 User : sysadm",
         "Password Change Success",
-        "Last password change\t\t\t\t\t: Jan 26, 2024",
-        "Password expires\t\t\t\t\t: Apr 25, 2024",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
+        "======================================"
+    ]
+}
+ok: [192.168.3.104] => {
+    "res_1.stdout_lines": [
+        "======================================",
+        "Server : worker-04 User : sysadm",
+        "Password Change Success",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
+        "======================================"
+    ]
+}
+ok: [192.168.3.105] => {
+    "res_1.stdout_lines": [
+        "======================================",
+        "Server : worker-05 User : sysadm",
+        "Password Change Success",
+        "Last password change\t\t\t\t\t: Jan 29, 2024",
+        "Password expires\t\t\t\t\t: Apr 28, 2024",
         "======================================"
     ]
 }
 
 TASK [use changed_password login test] ***********************************************************************************************************************************************************************
-changed: [192.168.3.103]
-changed: [192.168.3.102]
 changed: [192.168.3.101]
+changed: [192.168.3.103]
 changed: [192.168.3.104]
 changed: [192.168.3.100]
+changed: [192.168.3.102]
 changed: [192.168.3.105]
 
 TASK [debug_2] ***********************************************************************************************************************************************************************************************
@@ -751,7 +769,7 @@ ok: [192.168.3.100] => {
     "res_2.stdout_lines": [
         "spawn su sysadm",
         "Password: ",
-        "\u001b]0;sysadm@master-01:~\u0007\u001b[?1034h[sysadm@master-01 ~]$ whoami; exit;",
+        "\u001b]0;sysadm@master-01:/home/wocheon07\u0007\u001b[?1034h[sysadm@master-01 wocheon07]$ whoami; exit;",
         "sysadm",
         "exit"
     ]
@@ -760,7 +778,7 @@ ok: [192.168.3.102] => {
     "res_2.stdout_lines": [
         "spawn su sysadm",
         "Password: ",
-        "\u001b]0;sysadm@worker-02:~\u0007\u001b[?1034h[sysadm@worker-02 ~]$ whoami; exit;",
+        "\u001b]0;sysadm@worker-02:/home/wocheon07\u0007\u001b[?1034h[sysadm@worker-02 wocheon07]$ whoami; exit;",
         "sysadm",
         "exit"
     ]
@@ -769,16 +787,7 @@ ok: [192.168.3.101] => {
     "res_2.stdout_lines": [
         "spawn su sysadm",
         "Password: ",
-        "\u001b]0;sysadm@worker-01:~\u0007\u001b[?1034h[sysadm@worker-01 ~]$ whoami; exit;",
-        "sysadm",
-        "exit"
-    ]
-}
-ok: [192.168.3.105] => {
-    "res_2.stdout_lines": [
-        "spawn su sysadm",
-        "Password: ",
-        "\u001b]0;sysadm@worker-05:~\u0007\u001b[?1034h[sysadm@worker-05 ~]$ whoami; exit;",
+        "\u001b]0;sysadm@worker-01:/home/wocheon07\u0007\u001b[?1034h[sysadm@worker-01 wocheon07]$ whoami; exit;",
         "sysadm",
         "exit"
     ]
@@ -787,7 +796,7 @@ ok: [192.168.3.103] => {
     "res_2.stdout_lines": [
         "spawn su sysadm",
         "Password: ",
-        "\u001b]0;sysadm@worker-03:~\u0007\u001b[?1034h[sysadm@worker-03 ~]$ whoami; exit;",
+        "\u001b]0;sysadm@worker-03:/home/wocheon07\u0007\u001b[?1034h[sysadm@worker-03 wocheon07]$ whoami; exit;",
         "sysadm",
         "exit"
     ]
@@ -796,7 +805,16 @@ ok: [192.168.3.104] => {
     "res_2.stdout_lines": [
         "spawn su sysadm",
         "Password: ",
-        "\u001b]0;sysadm@worker-04:~\u0007\u001b[?1034h[sysadm@worker-04 ~]$ whoami; exit;",
+        "\u001b]0;sysadm@worker-04:/home/wocheon07\u0007\u001b[?1034h[sysadm@worker-04 wocheon07]$ whoami; exit;",
+        "sysadm",
+        "exit"
+    ]
+}
+ok: [192.168.3.105] => {
+    "res_2.stdout_lines": [
+        "spawn su sysadm",
+        "Password: ",
+        "\u001b]0;sysadm@worker-05:/home/wocheon07\u0007\u001b[?1034h[sysadm@worker-05 wocheon07]$ whoami; exit;",
         "sysadm",
         "exit"
     ]
@@ -814,41 +832,44 @@ PLAY RECAP *********************************************************************
 - ansible-playbook 04.delete_scirpts.yml
 
 ```bash
-PLAY [task4 - delete copied script files] ********************************************
 
-TASK [rm expect scirpt] **************************************************************
+[root@master-01 gcp-ansible]# ansible-playbook 04.delete_scirpts.yml
+
+PLAY [task4 - delete copied script files] ********************************************************************************************************************************************************************
+
+TASK [rm expect scirpt] **************************************************************************************************************************************************************************************
+changed: [192.168.3.102]
 changed: [192.168.3.103]
 changed: [192.168.3.104]
-changed: [192.168.3.102]
 changed: [192.168.3.101]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
-TASK [rm script file_1 - chpasswd.sh] ************************************************
+TASK [rm script file_1 - chpasswd.sh] ************************************************************************************************************************************************************************
 changed: [192.168.3.103]
-changed: [192.168.3.101]
-changed: [192.168.3.104]
 changed: [192.168.3.102]
-changed: [192.168.3.100]
-changed: [192.168.3.105]
-
-TASK [rm script file_2 - chpasswd.sh] ************************************************
-changed: [192.168.3.102]
-changed: [192.168.3.103]
 changed: [192.168.3.101]
 changed: [192.168.3.104]
 changed: [192.168.3.100]
 changed: [192.168.3.105]
 
-TASK [rm log file - chpasswd.log] ****************************************************
-changed: [192.168.3.104]
-changed: [192.168.3.101]
-changed: [192.168.3.102]
+TASK [rm script file_2 - chpasswd.sh] ************************************************************************************************************************************************************************
 changed: [192.168.3.103]
 changed: [192.168.3.100]
+changed: [192.168.3.102]
+changed: [192.168.3.104]
+changed: [192.168.3.101]
 changed: [192.168.3.105]
 
-PLAY RECAP ***************************************************************************
+TASK [rm log file - chpasswd.log] ****************************************************************************************************************************************************************************
+changed: [192.168.3.103]
+changed: [192.168.3.101]
+changed: [192.168.3.100]
+changed: [192.168.3.104]
+changed: [192.168.3.102]
+changed: [192.168.3.105]
+
+PLAY RECAP ***************************************************************************************************************************************************************************************************
 192.168.3.100              : ok=4    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 192.168.3.101              : ok=4    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 192.168.3.102              : ok=4    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
@@ -857,24 +878,132 @@ PLAY RECAP *********************************************************************
 192.168.3.105              : ok=4    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
+## 에러 처리
+
+### ssh 접속 불가 
+- /etc/ssh/sshd_config 파일 설정 확인
+    - PubkeyAuthentication yes
+    - AuthorizedKeysFile      .ssh/authorized_keys
 
 
-- name: task2 - run script by expect script
+- .ssh 및 authorized_keys 권한, 소유자 확인
+```
+[root@master-01 gcp-ansible]# ssh 192.168.3.101
+Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+[root@worker-01 .ssh]# ll
+total 16
+-rw-rw-rw-. 1 root root  403 Jan 25 06:34 authorized_keys
+```
+
+
+- 변경 후 sshd 재시작
+
+
+### ansible 기본 디렉토리 권한문제
+- playbook 실행시 다음 에러가 발생하는 경우 홈디렉토리의 .ansible디렉토리 권한을 확인해볼 것
+
+
+- 에러발생
+```bash
+PLAY [task1 - copy script files] *****************************************************************************************************************************************************************************
+
+TASK [copy expect scirpt] ************************************************************************************************************************************************************************************
+fatal: [192.168.3.102]: UNREACHABLE! => {"changed": false, "msg": "Failed to create temporary directory.In some cases, you may have been able to authenticate and did not have permissions on the target directory. Consider changing the remote tmp path in ansible.cfg to a path rooted in \"/tmp\", for more error information use -vvv. Failed command was: ( umask 77 && mkdir -p \"` echo /home/wocheon07/.ansible/tmp `\"&& mkdir \"` echo /home/wocheon07/.ansible/tmp/ansible-tmp-1706489293.03-3985-83962787573887 `\" && echo ansible-tmp-1706489293.03-3985-83962787573887=\"` echo /home/wocheon07/.ansible/tmp/ansible-tmp-1706489293.03-3985-83962787573887 `\" ), exited with result 1", "unreachable": true}
+```
+
+
+- ansible 기본 디렉토리 권한 확인
+```bash
+#권한 확인
+[wocheon07@worker-01 ~]$ ls -la
+total 16
+drwx------. 4 wocheon07 wocheon07 111 Jan 25 07:59 .
+drwxr-xr-x. 6 root      root       70 Jan 29 00:40 ..
+drwx------. 3 root      root       17 Jan 25 06:31 .ansible   #소유자/그룹이 root
+-rw-------. 1 wocheon07 wocheon07   9 Jan 25 07:59 .bash_history
+-rw-r--r--. 1 wocheon07 wocheon07  18 Nov 24  2021 .bash_logout
+-rw-r--r--. 1 wocheon07 wocheon07 193 Nov 24  2021 .bash_profile
+-rw-r--r--. 1 wocheon07 wocheon07 231 Nov 24  2021 .bashrc
+drwx------. 2 wocheon07 wocheon07  29 Jan 29 00:17 .ssh
+
+# chown으로 소유자 변경
+[root@worker-01 ~]$ chown -R wocheon07.wocheon07 /home/wocheon07
+
+
+# 정상 실행 확인
+PLAY [task1 - copy script files] *****************************************************************************************************************************************************************************
+
+TASK [copy expect scirpt] ************************************************************************************************************************************************************************************
+changed: [192.168.3.102]
+```
+
+
+
+
+## 추가 - root로 ssh 접속이 가능한 경우
+- 만약 root로 ssh접속이 가능한 환경이라면 다음과 같은 방법으로도 적용 가능
+
+>passwd_change.yml
+```yml
+- name: Step1 - password change by root
+  hosts: worker
+  gather_facts: no
+  become: true
+  vars_files: var_list.yml
+
+  tasks:
+
+  - name: usercheck_1
+    shell: |
+      whoami
+    register: res
+
+  - name: Check user_name
+    debug: var=res.stdout_lines
+
+  - name: ip check
+    shell: |
+      echo "{{ password_rule }}$(hostname -i | gawk '{print $1}' | gawk -F"." '{print $4}')"
+    register: PASSWORD
+
+#  - name: print passwd
+#    debug: var=PASSWORD.stdout_lines
+
+  - name: change_passwd
+    user:
+      name: "sysadm"
+      password: "{{ PASSWORD.stdout | password_hash('sha512') }}"
+
+- name: Step2 - changed passwd check
   hosts: worker
   gather_facts: no
   become: false
   vars_files: var_list.yml
+  remote_user: wocheon07
 
   tasks:
-  - name: ip 확인
+
+  - name: usercheck_2
     shell: |
-      echo "{{ PASSWORD_RULE }}$(hostname -i | gawk '{print $1}' | gawk -F"." '{print $4}')"
-    register: PASSWORD
+      whoami
+    register: res
 
-  - name: debug
-    debug: var=PASSWORD.stdout_lines
+  - name: Check user_name
+    debug: var=res.stdout_lines
 
-  - name: 패스워드 변경
-    user:
-      name: "{{ USER_NAME }}"
-      password: "{{ PASSWORD | password_hash('sha512') }}"
+  - name: copy scirpt file - sysadm_login_test.sh
+    copy:
+      src: "{{ playbook_dir }}/scripts/{{ file_nm_2 }}"
+      dest: "{{ copy_path }}{{ file_nm_2 }}"
+      mode: 0755
+    tags: file_2
+
+  - name: use changed_password login test
+    shell: |
+      bash sysadm_login_test.sh '{{ password_rule }}'
+    register: res_2
+
+  - name: debug_2
+    debug: var=res_2.stdout_lines
+```

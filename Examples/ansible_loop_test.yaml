@@ -1,0 +1,63 @@
+- name: ansible loop - 1
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - master-01
+      - worker-01
+      - worker-02
+      - worker-03
+      - worker-04
+      - worker-05
+
+  tasks:
+  - name: vm_name
+    debug:
+      msg: "{{ item }}"
+    with_items:
+      "{{ vms }}"
+
+- name: ansible loop - 2
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - vm_name: master-01
+        vm_ip : 192.168.3.100
+      - vm_name: worker-01
+        vm_ip : 192.168.3.101
+      - vm_name: worker-02
+        vm_ip : 192.168.3.102
+      - vm_name: worker-03
+        vm_ip : 192.168.3.103
+      - vm_name: worker-04
+        vm_ip : 192.168.3.104
+      - vm_name: worker-05
+        vm_ip : 192.168.3.105
+
+  tasks:
+  - name: vm_name + IP
+    debug:
+      msg: "{{ item.vm_name }} / {{ item.vm_ip }}"
+    with_items:
+      "{{ vms }}"
+
+- name: ansible loop - 3
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vms:
+      - master-01
+      - worker-01
+      - worker-02
+      - worker-03
+      - worker-04
+      - worker-05
+  vars_files: var_list.yaml
+
+  tasks:
+  - name: vm_name
+    debug:
+      msg: "{{ item }} : {{ vm_state }}"
+    with_items:
+      "{{ vms }}"
