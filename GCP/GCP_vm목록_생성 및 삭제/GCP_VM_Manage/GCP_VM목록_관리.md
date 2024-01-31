@@ -373,7 +373,7 @@ vm_list:
         - auto_delete: true
           boot: true
           source:
-            selfLink: "https://www.googleapis.com/compute/v1/projects/{{ gcp_project }}/zones/{{ zone }}/disks/{{ ii
+            selfLink: "https://www.googleapis.com/compute/v1/projects/{{ gcp_project }}/zones/{{ zone }}/disks/{{ 
 tem.boot_disk_name }}"
       network_interfaces:
         - network:
