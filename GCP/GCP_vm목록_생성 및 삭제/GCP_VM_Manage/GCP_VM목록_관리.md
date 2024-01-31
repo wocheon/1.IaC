@@ -1,4 +1,8 @@
 # Ansible을 통한 GCP VM 관리 
+## 개요
+- 테스트 환경 구성을 위해 동일한 세팅의 VM을 여러대 생성 필요
+
+- ansible을 통해 한번에 여러 VM을 생성/중지/삭제 가능하도록 playbook을 작성
 
 ## Ansible 설정
 - host는 localhost로 설정하여 진행함
@@ -463,6 +467,67 @@ PLAY RECAP *********************************************************************
 
 <img src="vm결과.PNG" width="90%" height="130">
 
+## VM 상태 변경 
+- 중지상태인 vm을 재시작
+  - worker-02의 vm_status 키 값을 running으로 변경
+
+```yml
+  - vm_name: worker-01
+    vm_ip : 192.168.3.101
+    machine_type: e2-micro
+    boot_disk_name: worker-01-001
+    boot_disk_size: 20
+    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_auto_delete: true
+    vm_onoff: absent
+    vm_status: absent
+#    vm_onoff: present
+#    vm_status: RUNNING
+
+  - vm_name: worker-02
+    vm_ip : 192.168.3.102
+    machine_type: e2-micro
+    boot_disk_name: worker-02-001
+    boot_disk_size: 20
+    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_auto_delete: true
+    vm_onoff: absent
+    vm_status: absent
+#    vm_onoff: present
+#    vm_status: RUNNING
+```
+
+
+### 실행결과
+```
+[root@gcp-ansible-test create_vms]# ansible-playbook gcp_create_vm.yaml
+
+PLAY [Create an instance] ************************************************************************************************************************************************************************************
+
+TASK [create a disk] *****************************************************************************************************************************************************************************************
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+
+TASK [create vm] *********************************************************************************************************************************************************************************************
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+
+PLAY RECAP ***************************************************************************************************************************************************************************************************
+127.0.0.1                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+<img src="vm결과_2.PNG" width="90%" height="130">
+
+- worker-02 정상기동 확인
+
 
 ## 삭제 처리 
 - 생성된 vm 전체 삭제 처리 진행
@@ -491,7 +556,7 @@ PLAY RECAP *********************************************************************
     vm_onoff: absent
     vm_status: absent
 #    vm_onoff: present
-#    vm_status: TERMINATED
+#    vm_status: RUNNING
 ```
 
 ### 삭제용 playbook 작성
