@@ -301,3 +301,21 @@ PLAY RECAP *********************************************************************
 - 결과 확인
 
 <img src="win_cp_success.PNG">
+
+
+## 참고 - Window 서버에서 리눅스로 파일 가져오기
+- 위와 반대의 경우 기본 fetch모듈을 통해 가져옴
+    - 작업 대상 서버가 많은 경우 추가로 구분자를 설정해줘야 파일이 겹치지 않으므로 주의
+```
+- name: ansible win fetch test
+  hosts: win
+  gather_facts: false
+
+  tasks:
+  - name: copy file - windows to linux
+    fetch:
+      src: 'C:\Users\wocheon07\Desktop\testfile.txt'
+      dest: "{{ playbook_dir }}/testfile.txt"
+      flat: yes
+
+```
