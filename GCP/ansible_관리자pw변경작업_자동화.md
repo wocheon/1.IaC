@@ -209,7 +209,7 @@ total 4
 
 - ssh 키를 복사했으므로 패스워드 입력 없이 sysadm 접근 확인
 
-```bash
+```
 [root@master-01 ~]# ssh wocheon07@192.168.3.100
 Last login: Mon Jan 29 00:39:25 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
 [wocheon07@master-01 ~]$ logout
@@ -267,8 +267,8 @@ remote_user = wocheon07
 ### Ansible 연결 확인 
 - ansible 기본모듈인 ping으로 연결확인
 
-```bash
-ansible all -m ping
+```
+$ ansible all -m ping
 192.168.3.103 | SUCCESS => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/bin/python"
@@ -559,7 +559,7 @@ password_rule: '#sysadm_AbC@'
 
 ## 7. 실행결과 확인
 - ansible-playbook - 01.copy_scirpt_files.yml
-```bash
+```
 [root@master-01 gcp-ansible]# ansible-playbook 01.copy_scirpt_files.yml
 
 PLAY [task1 - copy script files] *****************************************************************************************************************************************************************************
@@ -601,7 +601,7 @@ PLAY RECAP *********************************************************************
 
 - ansible-playbook - 02.expect_run_scirpt.yml
 
-```bash
+```
 [root@master-01 gcp-ansible]# ansible-playbook 02.expect_run_scirpt.yml
 
 PLAY [task2 - run script by expect script] *******************************************************************************************************************************************************************
@@ -681,7 +681,7 @@ PLAY RECAP *********************************************************************
 
 - ansible-playbook - 03.check_result.yml
 
-```bash
+```
 [root@master-01 gcp-ansible]# ansible-playbook 03.check_result.yml
 
 PLAY [task3 - check password change result] ******************************************************************************************************************************************************************
