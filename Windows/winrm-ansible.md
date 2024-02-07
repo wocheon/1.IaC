@@ -12,12 +12,12 @@
 
 - 리눅스 서버 
     - ansible master 서버
-    - GCP gke (VM)
+    - GCP gce (VM)
     - centos 이미지 사용
 
 - Window 서버
     - ansible 작업 대상 서버
-    - GCP gke (VM)
+    - GCP gce (VM)
     - Windows Datacenter 2016 이미지 사용
 
 
