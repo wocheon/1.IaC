@@ -209,8 +209,40 @@ Listener
     CertificateThumbprint = 4B42446EDEE4A5AD0509B53E0C409675CD4CF186
     ListeningOn = 127.0.0.1, 192.168.1.10, ::1, 2001:0:2851:782c:1851:28be:3f57:fef5, fe80::5efe:192.168.1.10%7, fe80::1
 851:28be:3f57:fef5%8, fe80::3118:cca:c9a4:5d8%2
-
 ```
+
+### winrm 활성화 방법
+
+- winrm 활성화 (http만)
+    - https 연결시 별도의 인증서 필요
+    - 현재는 http만 사용하여 ansible을 연결하므로 http만 활성화
+```powershell
+WinRM quickconfig
+```
+
+- winrm https 활성화 방법
+    - self-signed 인증서 생성하여 진행
+
+- self-signed 인증서 생성    
+```
+> New-SelfSignedCertificate -CertstoreLocation Cert:\LocalMachine\My -DnsName $env:COMPUTERNAME
+
+Thumbprint                                Subject
+----------                                -------
+xxxxxx                                    CN=xxxxxx
+```
+- HTTPS 리스너 생성
+    - <hostname> : 'CN=' 뒤의 Hostname 입력
+    - <thumbprint> : 인증서의 thumbprint 값 입력
+```
+> winrm create winrm/config/Listener?Address=*+Transport=HTTPS '@{Hostname="<hostname>"; CertificateThumbprint="<thumbprint>"}'
+```
+
+- 리스너 삭제 시
+```
+ winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
+```
+
 
 - Window 서버 접속 계정 password 변경 권장
     - 추후 hosts 추가 시 편의를 위함
