@@ -1,0 +1,7 @@
+---
+- name: install nginx to nodes
+  hosts: localhost
+  become: yes
+  roles:
+    - { role: ./role/nginx }
+

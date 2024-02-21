@@ -1,0 +1,10 @@
+---
+# tasks file for role-test
+- name: nginx for linux
+  include_tasks: "{{ lnx_name }}.yml"
+
+- name: check nginx config
+  include_tasks: chk_ngx_cfg.yml
+
+- name: Check nginx service
+  debug: msg="{{lookup('template','ins_chk.j2').split('\n')}}"

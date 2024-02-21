@@ -1,0 +1,13 @@
+- name: test vars
+  hosts: localhost
+  become: false
+  gather_facts: true
+
+  tasks:
+  - name: test-1
+    debug:
+      msg: "{{ ansible_pkg_mgr }}"
+
+  - name: test-2
+    debug:
+      msg: "{{ ansible_distribution }}"

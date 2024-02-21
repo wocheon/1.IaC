@@ -1,0 +1,6 @@
+---
+# handlers file for role-test
+- name: Restart nginx web server
+  service:
+    name: nginx
+    state: restarted
