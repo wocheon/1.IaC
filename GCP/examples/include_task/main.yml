@@ -1,0 +1,15 @@
+- name: include task - Print vars test 
+  hosts: localhost
+  become: false
+  gather_facts: true
+
+  tasks:
+
+  - name: include task_1 
+    include_tasks: debug_vars_task.yml
+    vars:
+      var_1: test1
+
+  - include_tasks: debug_vars_task.yml
+    vars:
+      var_1: test2

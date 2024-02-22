@@ -1,0 +1,3 @@
+- name: debug var 
+  debug: 
+    msg: "{{ var_1 }}"
