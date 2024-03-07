@@ -1,0 +1,16 @@
+- name: Step1 - password change by root
+  hosts: localhost
+  gather_facts: yes
+  become: true
+
+  tasks:
+
+  - name: Check user_name
+    debug: var=ansible_env.USER
+
+  - name: set res
+    set_fact:
+      res: "{{ ansible_env.USER }}"
+
+  - name: debug res
+    debug: var=res
