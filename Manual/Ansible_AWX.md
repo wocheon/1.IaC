@@ -7,7 +7,6 @@ ansible 을 GUI 로 관리하고, api 로 제어할 수 있도록 해주는 시�
 ## AWX 공식매뉴얼
 [https://docs.ansible.com/ansible-tower/latest/html/userguide/](https://docs.ansible.com/ansible-tower/latest/html/userguide/)
 
-
 ### 최소 사양 
  - CPU 4 코어 이상, 메모리 8GB 이상
 
