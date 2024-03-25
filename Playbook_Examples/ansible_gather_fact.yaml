@@ -1,0 +1,53 @@
+- name: Ansible Gather_Facts Vars test
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+
+  - name: Print All Available Facts
+    debug:
+      var: ansible_facts
+
+  - name: Print HostName
+    debug:
+      msg: "{{ ansible_hostname }}"
+
+  - name: Print Remot User
+    debug:
+      msg: "{{ ansible_env.USER }}"
+
+  - name: Print System
+    debug:
+      msg: "{{ ansible_system }}"
+
+  - name: Print SHELL
+    debug:
+      msg: "{{ ansible_env.SHELL }}"
+
+  - name: Print OS
+    debug:
+      msg: "OS : {{ ansible_distribution }} OS_Family : {{ ansible_os_family }}"
+
+  - name: Print Service_Manager
+    debug:
+      msg: "{{ ansible_service_mgr }}"
+
+  - name: Print Package_Manager
+    debug:
+      msg: "{{ ansible_pkg_mgr }}"
+
+  - name: Print LANG
+    debug:
+      msg: "{{ ansible_env.LANG }}"
+
+  - name: Print Date TimeZone
+    debug:
+      msg: "{{ ansible_date_time.tz }}"
+
+  - name: Print Default IP
+    debug:
+      msg: "{{ ansible_default_ipv4.address }}"
+
+  - name: Print SELINUX Status
+    debug:
+      msg: "{{ ansible_selinux.status }}"
