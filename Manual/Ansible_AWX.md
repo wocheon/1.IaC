@@ -271,7 +271,8 @@ mkdir manual_test
 - 
 #### Create New Credential
 - Github와 Gitlab이 구분되어있으므로 주의
-항목|값|
+  
+|항목|값|
 |:-:|:-|
 |Name| git_hub_token|
 |Organization| Default|
