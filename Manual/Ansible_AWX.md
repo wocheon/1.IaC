@@ -220,12 +220,14 @@ mkdir manual_test
 |Source Control Credential Type | manual |
 |Playbook Directory| manual_test|
 <br>
+
 - `Playbook Direcoty 목록이 안뜨는경우 해결방법`
     
     - 설치시 사용한 inventory파일 확인 및 awx 계정생성 후,  <br>  /var/lib/awx/projects를 awx 유저 권한으로 부여해볼것
     
     - docker exec -it awx_web /bin/bash 로 접속후 /var/lib/awx/projects 확인 
 <br>
+
 ### 5. Job Template 추가 
 - Projects > Job Templates > add 혹은 Templates > add > add Job Template로 추가
 - 변수 지정, tag지정, timeout 지정 등 다양한 옵션 지원
@@ -233,12 +235,14 @@ mkdir manual_test
     - run : playbook 실행
     - check : 실행 가능한지 check 작업만 수행
 - Options
+  
 |옵션| 기능 |
 |:-:|:-|
 |Privilege Escalation|become (sudo) 기능|
 |Enable Fact Storage|gather_fact 기능|
 |Enable Webhook| Github 등에서 Webhook설정을 가능하게 함|
 |Concurrent Jobs|Run하기 전에 Check 작업 수행 하여 Fail나지 않으면 진행|
+
 #### Create New Job Template
 |항목|값|
 |:-:|:-|
@@ -264,6 +268,7 @@ mkdir manual_test
 ### GIt Project 생성
 - Credential 생성 후 project를 생성
 - 이후 생성된 프로젝트에서 yml파일을 불러와서 job 생성 및 실행
+- 
 #### Create New Credential
 - Github와 Gitlab이 구분되어있으므로 주의
 항목|값|
