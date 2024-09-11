@@ -236,3 +236,6 @@ Build 'googlecompute.example' finished after 3 minutes 10 seconds.
 ### Packer로 생성된 이미지 삭제 
 
 - Terraform의 Destory와 같은 기능은 없으며 GCP 콘솔 혹은 gcloud를 통해 직접 삭제 필요
+```
+$ gcloud compute image delete packer-image-240911
+```
