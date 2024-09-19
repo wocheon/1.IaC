@@ -5,8 +5,9 @@ zone          = "asia-northeast3-a"
 
 
 ### VM General Configurations ###
-vm_name = "terraform-test"
-machine_type  = "e2-micro"
+#vm_name = "terraform-test"
+vm_name = "db-test"
+machine_type  = "e2-small"
 vm_status = "RUNNING"
 auto_restart = true
 
@@ -19,8 +20,11 @@ vm_labels = {
 
 ### Boot_disk Configurations ###
 
-boot_disk_image = "centos-mariadb-image"
-boot_disk_size = 30     #number
+#boot_disk_image = "centos-mariadb-image"
+#boot_disk_image = "ubuntu-2004-focal-v20240830"
+#boot_disk_image = "ubuntu-2004-default-image"
+boot_disk_image = "packer-image-240912"
+boot_disk_size = 30	#number
 boot_disk_type = "pd-standard"
 boot_disk_auto_delete = true
 
@@ -32,27 +36,31 @@ boot_disk_labels = {
 ### Network Configurations ###
 
 network = "test-vpc-1"
-subnetwork = "test-vpc-sub-1"
-internal_ip = "192.168.1.101"
+subnetwork = "test-vpc-sub-01"
+internal_ip = "192.168.1.102"
 
 use_external_ip = true
 external_ip_tier = "STANDARD"
 
+network_tags = [
+	"work",
+	"terraform-test"
+]
 
-### Additional Disk Configurations ###
+### Additional Disk Configurations ### 
 enable_additional_disks = false
 
 additional_disks = [
-        { name = "add-disk-1"
-          size_gb = 20
-          type = "pd-standard"
+	{ name = "add-disk-1" 
+          size_gb = 20 
+          type = "pd-standard" 
         },
         { name = "add-disk-2"
           size_gb = 30
           type = "pd-standard"
         }
 ]
-### Service Scpoes List ###
+### Service Scpoes List ### 
 
 
 service_scope = "default"
@@ -61,7 +69,7 @@ service_scope_list = [
   "https://www.googleapis.com/auth/cloud-platform",
   "https://www.googleapis.com/auth/compute",
   "https://www.googleapis.com/auth/devstorage.full_control",
-  "https://www.googleapis.com/auth/cloud-platform"
+  "https://www.googleapis.com/auth/cloud-platform" 
 ]
 
 #default_scope_list = [

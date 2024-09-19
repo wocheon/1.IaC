@@ -24,10 +24,10 @@ resource "google_compute_instance" "example" {
   boot_disk {
     auto_delete = var.boot_disk_auto_delete
     initialize_params {
-      image = var.boot_disk_image
+      image = var.boot_disk_image 
       size  = var.boot_disk_size
       type  = var.boot_disk_type
-      labels = var.boot_disk_labels
+      labels = var.boot_disk_labels     
     }
   }
 
@@ -40,25 +40,27 @@ resource "google_compute_instance" "example" {
   }
 
   network_interface {
-    network    = var.network
-    subnetwork = var.subnetwork
+    network    = var.network 
+    subnetwork = var.subnetwork 
     network_ip = var.internal_ip
     dynamic "access_config" {
       for_each = var.use_external_ip ? [1] : []
       content {
-                network_tier = var.external_ip_tier
+	      	network_tier = var.external_ip_tier
      }
     }
   }
 
+  tags = var.network_tags
+
   dynamic "service_account" {
   for_each = var.service_scope == "selected" ? [1] : [1]
     content {
-        email  = "xxxxxxxxxxxxx-compute@developer.gserviceaccount.com"
+        email  = "487401709675-compute@developer.gserviceaccount.com"
         scopes = var.service_scope == "selected" ? var.service_scope_list : var.default_scope_list
      }
   }
-
+  
 
 
   scheduling {
@@ -74,5 +76,4 @@ resource "google_compute_instance" "example" {
   }
 
 
-  tags = []
 }

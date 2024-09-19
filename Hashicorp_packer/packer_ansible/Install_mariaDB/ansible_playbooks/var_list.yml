@@ -1,0 +1,46 @@
+# VM Variables
+user_mysql_password: 'welcome1'
+
+base_dirs:
+  - /data001/mariaDB/MARIA
+  - /data001/mariaDB/MARIA_LOG/binary
+  - /data001/mariaDB/MARIA_LOG/relay
+  - /data001/mariaDB/MARIA_LOG/slow
+  - /data001/mariaDB/MARIA_LOG/general
+  - /data001/mariaDB/MARIA_LOG/error
+  - /data001/mariaDB/BATCH
+  - /data001/mariaDB/WORK/GCP
+  - /data001/mariaDB/MON/LOCK
+  - /data001/mariaDB/MON/LOG
+  - /data001/mariaDB/BACKUP/TABLE
+  - /data001/mariaDB/BACKUP/MIG
+  - /data001/mariaDB/BACKUP/DAILY
+  - /data001/mariaDB/MARIA_DATA/tmpdir
+
+mariadb_sourcefile: 'mariadb-10.5.10-linux-systemd-x86_64.tar.gz'
+split_var_1: "{{ mariadb_sourcefile | split('-') }}"
+split_var_2: "{{ mariadb_sourcefile | split('.tar') }}"
+
+mariadb_sourcedir: "{{ split_var_2[0] }}"
+mariadb_renamedir: "{{ split_var_1[0] + '-' +  split_var_1[1] }}"
+mariadb_linkdir: "{{ split_var_1[0] }}"
+
+mariadb_port: 3306
+
+
+# MariaDB Variables
+mariadb_root_password: 'welcome1'
+dbauser_password: 'Testuser!234'
+exporter_password: 'Testuser!@34'
+
+
+# MYSQL Exporter 
+mysql_exporter_sourcefile: "mysqld_exporter-0.14.0.linux-amd64.tar.gz"
+mysql_exporter_dir: "/usr/share/"
+exporter_password: "Testuser!@34"
+
+split_var_3: "{{ mysql_exporter_sourcefile | split('.tar') }}"
+mysql_exporter_sourcedir: "{{ split_var_3[0] }}"
+
+
+ 

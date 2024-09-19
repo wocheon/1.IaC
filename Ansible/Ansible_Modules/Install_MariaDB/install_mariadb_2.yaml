@@ -1,0 +1,80 @@
+- name: Set MariaDB
+  hosts: db
+  gather_facts: yes
+  remote_user: root
+  vars_files: var_list.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  
+  tasks:
+   - name : check python version
+     debug:
+       msg: "{{ ansible_python_interpreter }}"
+
+   - name: Install Packages - python3, python3-pip
+     action: "{{ ansible_pkg_mgr }} name=python3,python3-pip state=latest"
+
+   - name: Install Packages - dependency(APT)
+     action: "{{ ansible_pkg_mgr }} name=python3-dev,default-libmysqlclient-dev,build-essential state=latest"
+     when:  ansible_pkg_mgr == 'apt'
+
+   - name: Install Packages - dependency(YUM)
+     action: "{{ ansible_pkg_mgr }} name=python3-devel,mysql-devel state=latest"
+     when: ansible_pkg_mgr == 'yum'
+
+   - name: Install pip Packages - PyMySQL
+     pip:
+       name: PyMySQL 
+
+   - name : Install MariaDB Plugin -  simple_password_check 
+     mysql_query: 
+       config_file: /etc/my.cnf
+       login_db: mysql
+       login_port: "{{ mariadb_port }}"
+       login_user: root
+       login_password: "{{ mariadb_root_password }}"
+       query: 
+         - select now() from dual
+         - INSTALL PLUGIN simple_password_check SONAME 'simple_password_check.so'
+         - SELECT PLUGIN_NAME, PLUGIN_STATUS, PLUGIN_TYPE, PLUGIN_LIBRARY  FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME = 'simple_password_check';
+     register: res
+
+   - name : Print Install Result
+     debug:
+       msg: "{{ res }}"
+
+   - name : Change my.cnf - Simple_Password Activate
+     shell: |
+       sed -i 's/^#simple/simple/g' /etc/my.cnf
+       sed -i 's/^#max_password_error/max_password_error/g' /etc/my.cnf
+
+   - name: Restart MariaDB Service
+     service:
+       name: mariadb
+       state: restarted
+
+   - name: Wait For MariaDB Port Open
+     wait_for: 
+       port: "{{ mariadb_port }}"
+       host: localhost
+       timeout: 10
+
+   - name : Create DBA & Exporter Account
+     mysql_query:
+       config_file: /etc/my.cnf
+       login_db: mysql
+       login_port: "{{ mariadb_port }}"
+       login_user: root
+       login_password: "{{ mariadb_root_password }}"
+       query:
+         - CREATE USER 'dbauser'@'%' IDENTIFIED BY '{{ dbauser_password }}'
+         - CREATE USER 'exporter'@'127.0.0.1' IDENTIFIED BY '{{ exporter_password }}' WITH MAX_USER_CONNECTIONS 2; 
+         - GRANT ALL privileges ON *.* TO 'dbauser'@'%' WITH GRANT OPTION
+         - GRANT PROCESS, REPLICATION CLIENT, SLAVE MONITOR, SELECT ON *.* TO 'exporter'@'127.0.0.1' 
+         - FLUSH PRIVILEGES
+     register: res_2
+
+   - name : Print Install Result
+     debug:
+       msg: "{{ res_2 }}"
+

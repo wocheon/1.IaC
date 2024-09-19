@@ -1,0 +1,13 @@
+[Unit]
+Description=MariaDB database server 
+After=network.target
+
+[Service]
+Type=simple
+User=mysql
+Group=mysql
+ExecStart=/data001/mariaDB/MARIA/mariadb/bin/mysqld_safe --defaults-file=/etc/my.cnf
+ExecStop=/data001/mariaDB/MARIA/mariadb/bin/mysqladmin -u root shutdown
+
+[Install]
+WantedBy=multi-user.target

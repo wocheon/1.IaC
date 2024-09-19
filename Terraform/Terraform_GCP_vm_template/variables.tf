@@ -38,10 +38,10 @@ variable "auto_restart" {
 
 variable "vm_labels" {
   type        = map(string)
-  default     = {
+  default     = { 
         type = "gce-boot-disk"
-        user = "wocheon07"
-  }
+        user = "wocheon07"   
+  } 
 }
 
 
@@ -53,7 +53,7 @@ variable "boot_disk_image" {
 
 variable "boot_disk_size" {
   type        = number
-  default     = 20
+  default     = 20	
 }
 
 variable "boot_disk_type" {
@@ -68,10 +68,10 @@ variable "boot_disk_auto_delete" {
 
 variable "boot_disk_labels" {
   type        = map(string)
-  default     = {
+  default     = { 
         type = "gce-boot-disk"
-        user = "wocheon07"
-  }
+        user = "wocheon07"   
+  } 
 }
 
 ### Network Configurations ###
@@ -99,8 +99,15 @@ variable "external_ip_tier" {
   default     = "STANDARD"
 }
 
+variable "network_tags" {
+  type        = list(string)
+  default     = [
+   "dev",
+   "terraform"
+  ]
+}
 
-### Additional disk Configurations ###
+### Additional disk Configurations ### 
 
 variable "enable_additional_disks" {
   type        = bool
@@ -118,7 +125,7 @@ variable "additional_disks" {
 }
 
 
-### Service_Account Scopes ###
+### Service_Account Scopes ### 
 
 variable "service_scope" {
   description = "Scope of permissions for the service account"

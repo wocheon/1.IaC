@@ -1,0 +1,41 @@
+- name: Set MariaDB
+  hosts: all
+  gather_facts: yes
+  vars_files: var_list.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  
+  tasks:
+
+   - name: copy MYSQL Exporter SourceFile
+     copy:
+       src: "files/{{ mysql_exporter_sourcefile }}"
+       dest: "{{ mysql_exporter_dir }}"
+
+   - name: Unarchive MariaDB Source Files
+     unarchive:
+       src: "{{ mysql_exporter_dir }}{{ mysql_exporter_sourcefile }}"
+       dest: "{{ mysql_exporter_dir }}"
+       remote_src: true
+
+   - name: Block In File - mysqld_exporter.cnf
+     blockinfile:
+       create: true
+       path: "{{ mysql_exporter_dir }}{{ mysql_exporter_sourcedir  }}/mysqld_exporter.cnf"
+       block: |
+         [client]
+         host=localhost
+         port={{ mariadb_port }}
+         user=exporter
+         password ={{ exporter_password }}
+
+   - name: copy MYSQL Exporter Service File
+     copy:
+       src: "files/mysqld_exporter.service"
+       dest: "/etc/systemd/system/mysqld_exporter.service"
+
+   - name: Restart mysql exporter Service
+     service:
+       name: mysqld_exporter
+       state: restarted
+       enabled: yes

@@ -1,0 +1,101 @@
+- name: Packer - install MariaDB 
+  hosts: all 
+  gather_facts: yes
+  vars_files: var_list.yml
+  
+  tasks:
+    - name: Set timezone to Asia/Seoul
+      become: true
+      community.general.timezone:
+        name: Asia/Seoul
+
+    - name: Check Package Manager
+      debug:
+        msg: "{{ ansible_pkg_mgr}}"
+
+    - name: Update Package Manager
+      action: "{{ ansible_pkg_mgr }} update_cache=yes state=latest"
+      register: update
+
+    - name: Install Packages - curl,wget,libncurses5
+      action: "{{ ansible_pkg_mgr }} name=curl,wget,libncurses5 state=latest"
+
+    - name: Create MariaDB Group
+      group:
+        name: mysql
+
+    - name: Create MariaDB User
+      user:
+        name: mysql
+        group: mysql
+        system : true
+        password : "{{ user_mysql_password | password_hash('sha512') }}"
+
+    - name: Create MariaDB Base Directories
+      file: 
+        path: "{{ item }}"
+        owner: mysql
+        group: mysql
+        state: directory
+      with_items:
+        - "{{ base_dirs }}"
+       
+    - name: copy MariaDB Config File
+      copy:
+        src: "files/my.cnf"
+        dest: "/etc/my.cnf"
+
+    - name: copy MariaDB Source Files
+      copy: 
+        src: "files/{{ mariadb_sourcefile }}"
+        dest: "/data001/mariaDB/MARIA/"
+
+
+    - name: Unarchive MariaDB Source Files
+      unarchive: 
+        src: "/data001/mariaDB/MARIA/{{ mariadb_sourcefile }}"
+        dest: "/data001/mariaDB/MARIA/"
+        remote_src: true
+
+    - name: Rename MariaDB Source Directory
+      shell: |
+        cd /data001/mariaDB/MARIA/
+        mv {{ mariadb_sourcedir }} {{ mariadb_renamedir }}
+
+    - name: Create Symbolic Link MariaDB Source Directory
+      file: 
+        src: "/data001/mariaDB/MARIA/{{ mariadb_renamedir }}"
+        dest: "/data001/mariaDB/MARIA/{{ mariadb_linkdir }}"
+        state: link
+
+    - name: Add custom PATH to /etc/profile
+      lineinfile:
+        path: /etc/profile
+        regexp: '^export PATH='
+        line: 'export PATH="/data001/mariaDB/MARIA/{{ mariadb_linkdir }}/bin:$PATH"'
+        state: present
+
+    - name: MariaDB initialize Setting
+      shell: |
+        cd /data001/mariaDB/MARIA/mariadb
+        ./scripts/mysql_install_db --defaults-file=/etc/my.cnf --user=mysql 
+        ./bin/mysqladmin -u root password '{{ mariadb_root_password }}'
+      register: script_result
+      failed_when: script_result.rc not in [0,1]
+    
+
+    - name: Print Result - MariaDB initialize Setting
+      debug:
+        msg: "{{ script_result.stdout_lines }}"
+
+    - name: Copy MariaDB Service
+      copy:
+        src: "files/mariadb.service"
+        dest: "/etc/systemd/system/mariadb.service"
+
+    - name: Start MariaDB Service 
+      service: 
+        daemon_reload: true
+        enabled: true
+        name: mariadb
+        state: started
