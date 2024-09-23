@@ -81,7 +81,7 @@ $ mkdir hashicorp_packer ; cd hashicorp_packer
 - "# Packer Configuration for Google Cloud Platform " 주석을 붙여야 Vim에서 양식을 인식함
 
 > vim example.pkr.hcl
-```h
+```tf
 # Packer Configuration for Google Cloud Platform
 packer {
   required_plugins {
@@ -160,7 +160,7 @@ $ packer init
     - 필요 시 따로 변수 템플릿 파일을 만들어서 사용가능 
 
 > vi variables.pkr.hcl
-```h
+```tf
 # Packer Configuration for Google Cloud Platform
 project_id = "gcp-in-ca"
 region = "asia-northeast3"
