@@ -1,0 +1,11 @@
+gke_gcp_project           = "gcp-in-ca"
+gke_cluster_name          = "test-gke-cluster"
+gke_version               = "1.30.9-gke.1009000"
+gke_zone                  = "asia-northeast3-a"
+gke_network               = "test-vpc-1"
+gke_subnetwork            = "test-vpc-sub-01"
+gke_subnetwork_region     = "asia-northeast3"
+gke_node_pool_name        = "node-pool-1"
+gke_node_count            = 1
+gke_node_machine_type     = "e2-medium"
+gke_node_bootdisk_size    = 50
