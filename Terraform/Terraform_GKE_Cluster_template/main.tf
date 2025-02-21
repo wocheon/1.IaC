@@ -21,7 +21,8 @@ resource "google_container_cluster" "primary" {
   network            = var.gke_network
   subnetwork         = var.gke_subnetwork
   min_master_version = var.gke_version
-
+  deletion_protection = false
+  
   remove_default_node_pool = true
   initial_node_count       = 1
   #wait_for_cluster	   = false
