@@ -24,7 +24,7 @@ resource "google_container_cluster" "primary" {
 
   remove_default_node_pool = true
   initial_node_count       = 1
-  wait_for_cluster	   = false
+  #wait_for_cluster	   = false
 }
 
 resource "google_container_node_pool" "primary_nodes" {
@@ -32,7 +32,7 @@ resource "google_container_node_pool" "primary_nodes" {
   location   = var.gke_zone
   cluster    = google_container_cluster.primary.name
   node_count = var.gke_node_count
-  wait_for_node_pool = false
+  #wait_for_node_pool = false
 
   node_config {
     machine_type = var.gke_node_machine_type
