@@ -65,7 +65,7 @@ root@aws-test-vm-ciw0707:~/workspaces/terraform/aws_import_vm# terraform show
 # aws_instance.import_vm:
 resource "aws_instance" "import_vm" {
     ami                                  = "ami-xxxxxxxxxxxxxxx"
-    arn                                  = "arn:aws:ec2:ap-northeast-2:xxxxxxxxxxxx:instance/i-0fca6575c4921ce9d"
+    arn                                  = "arn:aws:ec2:ap-northeast-2:xxxxxxxxxxxx:instance/i-xxxxxxxxxx"
     associate_public_ip_address          = true
     availability_zone                    = "ap-northeast-2a"
     cpu_core_count                       = 1
