@@ -20,7 +20,7 @@ terraform {
 ```
 
 ### AWS S3
-
+- key : *버킷 내에서 파일이 저장되는 "경로 + 파일명"*
 ```
 terraform {
   backend "s3" {
