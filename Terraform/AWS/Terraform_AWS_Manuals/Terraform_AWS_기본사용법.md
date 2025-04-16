@@ -6,6 +6,8 @@
 - 재사용 가능한 템플릿 형태로 tf파일 구성
 
 ## Terraform 설치 
+- https://developer.hashicorp.com/terraform/install
+  - GPG key 에러 발생시 다음과 같이 Binary 파일로 설치 
 ```bash
  $ wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
 
@@ -49,28 +51,11 @@ default  True       487401709675-compute@developer.gserviceaccount.com  gcp-in-c
 |terraform taint|- 특정 리소스를 '오염된(tainted)' 상태로 표시하여 다음 terraform apply 실행 시 해당 리소스를 강제로 다시 생성|리소스의 문제가 발생했을 때 또는 해당 리소스를 다시 생성하고자 할 때 사용|
 |terraform import|- 기존 인프라 리소스를 Terraform 상태로 가져오는 명령어| 기존 리소스를 Terraform 관리 하에 편입시킬 때 사용|
 
-
-## Terraform import로 GCP VM 정보 가져오기
-- Terraform import 명령어를 통해 VM의 정보를 가져와 Terrafrom 리소스에 포함 시킬 수 있음.
-    - VM외의 다른 리소스도 가능함
-
-- Import 시 terraform.tfstate 파일에 VM 정보가 기록됨
-
-- AWS의 경우 tfstate 파일을 .tf파일로 전환해주는 기능이 있으나, GCP에서는 tf파일을 직접 작성해줘야함 
-
-
-### Terrafrom import - main.tf 작성 
+## Terraform 커맨드 자동완성 활성화
 ```
-resource "google_compute_engine" "example" {
-}
-```
+terraform -install-autocomplete
 
-### Terraform imort - VM import 
-- terraform - GCP 간 연동이 완료되어야 정상 작동
-```
-$ terraform init
-
-$ terraform import google_compute_instance.example projects/gcp-in-ca/zones/asia-northeast3-a/instances/db1
+source ~/.bashrc
 ```
 
 
@@ -408,6 +393,6 @@ google_compute_instance.default: Still destroying... [id=projects/gcp-in-ca/zone
 google_compute_instance.default: Destruction complete after 1m52s
 
 Destroy complete! Resources: 1 destroyed.
-
-
 ```
+
+
