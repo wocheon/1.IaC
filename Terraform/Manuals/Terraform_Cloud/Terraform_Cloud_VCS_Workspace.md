@@ -1,4 +1,4 @@
-# Terraform Cloud - VCS 기반 workflow 활용
+# Terraform Cloud - VCS 기반 Workspace
 
 - VCS(Version Contril System)를 사용하는 Workspace를 생성하고 리소스 배포 및 수정 
 - Git 등과 같은 버전 관리 저장소와의 연동을 통해 리소스 버전 관리 가능
@@ -169,6 +169,13 @@
     - 변경사항 적용 후 Push 결과 
       <img src="images/tc_vcs_run_trigger_pending.png" width="80%" height="100%">
       - Plan 까지만 실행 후 Pending
+
+
+
+## State Lock으로 충돌 방지 
+
+- State 우측 상단 Lock 을 활성화 하면 현재 state를 잠금
+  - 현재 상태를 유지하면서 추가 변경사항이 적용되지않도록 설정 가능 
 
 
 ## Workspace 내의 State Destroy 

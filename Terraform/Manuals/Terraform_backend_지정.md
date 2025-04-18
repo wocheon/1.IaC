@@ -21,6 +21,7 @@ terraform {
 
 ### AWS S3
 - key : *버킷 내에서 파일이 저장되는 "경로 + 파일명"*
+- S3는 기본적으로 상태 락을 지원하지 않으므로 Lock을 구현하려면 DynamoDB 연동 필요
 ```
 terraform {
   backend "s3" {
@@ -32,7 +33,7 @@ terraform {
 ```
 
 ### Google Cloud Storage
-
+- 객체 보존 조치를 통해 Lock 구현 가능 
 ```
 terraform {
   backend "gcs" {
@@ -43,7 +44,7 @@ terraform {
 ```
 
 ### Terraform Cloud Workspace
-
+- Lock 기능 제공 
 ```
 terraform {
   backend "remote" {

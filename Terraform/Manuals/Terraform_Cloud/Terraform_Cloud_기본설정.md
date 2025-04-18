@@ -117,6 +117,20 @@
 - 생성 완료된 Workspace의 설정은 언제든 변경 가능 
 
 
+## Workspace 실행 모드 설정 
+- Workspace 내에서  어떤 환경에서 Plan/Apply를 실행할 것인지를 설정 
+    - VCS 연동 워크스페이스는 Remote Mode로만 사용 가능
+
+- Workspace 생성 후 기본설정은 Remote
+
+- 실행 모드 
+    - Remote : Terraform Cloud의 호스팅 환경에서 Plan/Apply를 실행
+    - Local : CLI를 실행하는 로컬 머신상에서 Plan/Apply를 실행
+    - Agent : Agent를 통해 실행 ( Free Tier 사용 불가 )
+
+- `실행모드를 변경하더라도 State 정보는 Work에 등록`
+
+
 ## 권한 구분
 - Terrafrom Cloud의 경우 조직, 팀, 개인 단위로 권한 조정가능 
     - Free Tier에서는 모든 사용자가 Owner 팀 에 속하며 전체 권한을 가짐 ( 수정 불가)
