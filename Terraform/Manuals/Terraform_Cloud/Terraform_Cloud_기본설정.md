@@ -115,3 +115,11 @@
     - API-Driven Workflow
   
 - 생성 완료된 Workspace의 설정은 언제든 변경 가능 
+
+
+## 권한 구분
+- Terrafrom Cloud의 경우 조직, 팀, 개인 단위로 권한 조정가능 
+    - Free Tier에서는 모든 사용자가 Owner 팀 에 속하며 전체 권한을 가짐 ( 수정 불가)
+    - Free Tier 사용 시 Owner 팀 외 별도 Team 추가 불가
+
+- 조직 , 팀, 개인 단위의 API 토큰을 생성 가능
