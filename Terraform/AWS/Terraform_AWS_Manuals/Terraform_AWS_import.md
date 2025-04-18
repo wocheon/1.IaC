@@ -18,7 +18,7 @@
 
 ### Terraform Import를 위한 Main.tf 작성 
 > main.tf
-```json
+```hcl
 provider "aws" {
   region = "ap-northeast-2"
 }
@@ -130,7 +130,7 @@ Terraform has compared your real infrastructure against your configuration and f
 
 - main.tf의 tags부분에 다음 내용 추가 
 > main.tf
-```json
+```hcl
 ...
     tags                                 = {
         "Name" = "aws-terraform-import-testvm"
