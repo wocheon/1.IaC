@@ -12,7 +12,7 @@
 
 1. Terrafrom import를 위한 main.tf 작성 
     - terraform 과 provider 구문은 생략 가능
-```json
+```hcl
 terraform {
   required_version = ">= 1.5.0"
 
@@ -96,7 +96,7 @@ resource "google_compute_instance" "my_vm" {
 
 - 테스트용 디스크 Import 용 main.tf 작성
 > main.tf
-```json
+```hcl
 terraform {
   required_version = ">= 1.5.0"
 
@@ -148,7 +148,7 @@ $ terraform show
         - 해당 Terraform 리소스의 공식 문서 참고하여 수정
 
 > main.tf
-```json
+```hcl
 terraform {
   required_version = ">= 1.5.0"
 
@@ -200,7 +200,7 @@ resource "google_compute_disk" "test_disk" {
 
 - main.tf 리소스내 label 추가 및 디스크 사이즈를 변경
 > main.tf
-```json
+```hcl
 ...
 
 resource "google_compute_disk" "test_disk" {

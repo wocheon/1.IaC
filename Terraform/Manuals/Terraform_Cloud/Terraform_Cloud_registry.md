@@ -11,7 +11,7 @@
 - 기본 사용 형식
     - Registry 내 모듈 경로를 Source로 지정
     - 모듈 버전을 명시 하지 않는 경우 최신 버전을 가져오지만, 안정성을 위해 사용
-    ```json
+    ```hcl
     module "vpc" {
     source  = "terraform-aws-modules/vpc/aws"
     version = "3.14.0"
@@ -254,7 +254,7 @@ module "module-registry" {
     - ~/.terraform.d/credentials.tfrc.json 파일 수동 생성
 
         >  ~/.terraform.d/credentials.tfrc.json
-        ```json
+        ```hcl
         credentials "app.terraform.io" {
           # valid user API token
           token = "[API Token]"

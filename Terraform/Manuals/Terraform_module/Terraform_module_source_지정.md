@@ -16,7 +16,7 @@
 
 ## Moudule 소스 지정 예시 
 
-```json
+```hcl
 module "gce_disk" {
 
 # Local File system
@@ -59,7 +59,7 @@ module "gce_disk" {
 
 - 사용 예시
   
-  ```json
+  ```hcl
   ### 기본 양식 ###
   # Github
   git::https://github.com/[git_repo].git//[디렉토리 위치]?ref=[브랜치명 or Tag]
@@ -85,7 +85,7 @@ module "gce_disk" {
   ```
 
 - 사용 예시
-  ```json
+  ```hcl
   module "gce_disk" {
   # GCS_Usage = gcs::https://www.googleapis.com/storage/v1/BUCKET_NAME/PATH_TO_MODULE
     source = "gcs::https://www.googleapis.com/storage/v1/terraform-module-bucket-wocheon07/modules/gce_disk.zip"
@@ -103,7 +103,7 @@ module "gce_disk" {
   ├── outputs.tf
   ```
 - 사용 예시
- ```json
+ ```hcl
 module "example" {
   # S3 Source 설정
   source = "s3::https://s3.amazonaws.com/<bucket-name>/<path-to-zip>"
@@ -124,7 +124,7 @@ credentials "app.terraform.io" {
 }
 ```
 
-```json
+```hcl
 module "module-repo_gce_disk" {
   source  = "app.terraform.io/gcp_terraform_wocheon07/module-repo/google//modules/gce_disk"
   version = "1.1.2"

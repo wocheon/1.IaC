@@ -43,7 +43,7 @@
 ## 모듈 구성 예시
 
 ###  Root 모듈 예시 
-```json
+```hcl
 # Provider는 Root 모듈에만 포함
 provider "google" {
   project = var.project
@@ -77,7 +77,7 @@ output "gce_disk_self_link" {
 ```
 
 ### 하위 GCP 모듈 예시
-```json
+```hcl
 resource "google_compute_disk" "gce_disk" {
         name            = var.new_disk_name
         zone            = var.new_disk_zone
@@ -119,7 +119,7 @@ resource "google_compute_disk" "gce_disk" {
 
 - 필요 권한 목록
 
-```json
+```hcl
 [
 # 버킷 관련 권한
   "storage.buckets.create",

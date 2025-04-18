@@ -29,7 +29,7 @@
         - 변수는 terraform.tfvars파일에서 별도 지정 
 
         > main.tf
-        ```json
+        ```hcl
         terraform {
           required_version = ">= 1.5.0"
 
@@ -72,7 +72,7 @@
         ```
 
         > variables.tf
-        ```json
+        ```hcl
         variable "project" { type = string }
         variable "region" { type = string, default = "asia-northeast3" }
         variable "zone" { type = string, default = "asia-northeast3-c" }
@@ -86,7 +86,7 @@
         ```
 
         > terraform.tfvars
-        ```json
+        ```hcl
         project       = "gcp-in-ca"
         region        = "asia-northeast3"
         zone          = "asia-northeast3-a"        

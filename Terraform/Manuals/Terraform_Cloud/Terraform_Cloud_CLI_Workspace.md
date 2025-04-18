@@ -18,7 +18,7 @@
 - tf 파일내 Terraform Cloud Workspace 정보를 명시 필요
 
 > main.tf
-```JSON
+```hcl
 terraform {
   # Terraform Cloud Workspace
   cloud { 
@@ -346,7 +346,7 @@ Waiting for the manually locked workspace to be unlocked...
 
 ## 기존 Local backend를  Terraform Cloud로 이관
 - 기존 Local에서 사용하던 리소스의 백엔드를 Terrafrom Cloud 로 지정하면 현재 State파일을 이관 가능 
-```json
+```hcl
 terraform {
   required_version = ">= 1.5.0"
 
