@@ -177,5 +177,12 @@
 
 - CLI를 통해 Destory 하거나  Workspace 설정에서 Queue destroy plan을 실행해야 함
     - Workspace Settings -> Destruction and Deletion -> Queue destroy plan
-  
+  <img src="images/tc_vcs_manual_destroy.png" width="80%" height="100%">
+
+  - Queue Destroy 실행 시 Destroy Run 실행 
+    <img src="images/tc_vcs_manual_destroy_que.png" width="80%" height="100%">
+
 - main.tf에서 리소스 블록를 제거하여 간접 Destroy 가능
+  - Module, Output 부분을 주석처리 혹은 제외 후 Commit&Push
+   <img src="images/tc_vcs_soft_destroy.png" width="80%" height="100%">
+    - 리소스가 정상적으로 Destroy됨을 확인
