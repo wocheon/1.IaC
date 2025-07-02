@@ -57,7 +57,7 @@ resource "google_compute_instance" "gce_instance" {
   
   scheduling {
     automatic_restart   = var.auto_restart
-    on_host_maintenance = "MIGRATE"
+    on_host_maintenance = var.on_host_maintenance
     preemptible         = false
   }
 

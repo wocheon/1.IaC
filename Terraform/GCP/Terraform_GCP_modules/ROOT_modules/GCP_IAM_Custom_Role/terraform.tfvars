@@ -3,7 +3,7 @@ project       = "gcp-in-ca"
 region        = "asia-northeast3"
 
 ### GCP IAM Custom Role Configurations ###
-role_id             = "terraform_test_customrole_lmsss"
+role_id             = "xxxx"
 role_title          = "테라폼 테스트 커스텀 Role"
 role_description    = "Terraform Custom Role"
 #role_project_id     = "project_id"
