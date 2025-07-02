@@ -111,6 +111,11 @@ variable "default_scope_list" {
   ]
 }
 
+variable "on_host_maintenance" {  
+  type        = string
+  default     = "MIGRATE"
+}
+
 variable "new_template_auto_restart" {
   description = "자동 재시작 여부"
   type        = bool

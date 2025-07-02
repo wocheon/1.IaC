@@ -37,4 +37,5 @@ module "gce_instance_template" {
   service_scope                  = var.service_scope
   service_scope_list             = var.service_scope_list
   default_scope_list             = var.default_scope_list
+  on_host_maintenance            = var.on_host_maintenance
 }

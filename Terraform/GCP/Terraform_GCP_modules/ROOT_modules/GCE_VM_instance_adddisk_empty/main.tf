@@ -49,6 +49,7 @@ module "gce_instance" {
 #  vm_status                 = var.status                       # Default : RUNNING
 #  auto_restart              = var.auto_restart                 # Default : true
 #  boot_disk_auto_delete     = var.boot_disk_auto_delete        # Default : true
+#  on_host_maintenance       = var.on_host_maintenance          # Default : MIGRATE
 #  use_external_ip           = var.use_external_ip              # Default : true
 #  external_ip_tier          = var.external_ip_tier             # Default : STANDARD
 

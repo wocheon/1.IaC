@@ -45,7 +45,7 @@ resource "google_compute_instance_template" "this" {
   
   scheduling {
     automatic_restart   = var.new_template_auto_restart
-    on_host_maintenance = "MIGRATE"
+    on_host_maintenance = var.on_host_maintenance
     preemptible         = false    
   }
 

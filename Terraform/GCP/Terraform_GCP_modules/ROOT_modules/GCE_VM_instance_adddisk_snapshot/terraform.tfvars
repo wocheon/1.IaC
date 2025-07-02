@@ -16,6 +16,8 @@ vm_labels = {
   provider  = "terraform"
 }
 
+on_host_maintenance = "MIGRATE"
+
 ### gpu configurations ###
 use_gpu_accelerator     = false
 #gpu_type                = "nvidia-tesla-t4"

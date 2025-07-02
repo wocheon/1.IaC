@@ -37,5 +37,6 @@ service_scope_list = [
   "https://www.googleapis.com/auth/cloud-platform" 
 ]
 
+on_host_maintenance           = "MIGRATE"
 
 new_template_auto_restart      = true

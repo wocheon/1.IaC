@@ -132,7 +132,10 @@ variable "service_scope" {
 variable "service_scope_list" {
   type        = list(string)
 }
-
+variable "on_host_maintenance" {  
+  type        = string  
+  default = "MIGRATE"
+}
 variable "default_scope_list" {
   type        = list(string)
   default     = [
