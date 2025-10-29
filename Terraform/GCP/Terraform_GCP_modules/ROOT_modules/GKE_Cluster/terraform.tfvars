@@ -1,5 +1,5 @@
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 
 ### GKE Cluster Default Configurations ###
@@ -68,7 +68,7 @@ gke_container_node_pools = {
     node_pool_tags             = ["web"]
     node_pool_auto_repair      = true
     node_pool_auto_upgrade     = true
-    node_pool_sa_account       = "terraform-custom-sa@gcp-in-ca.iam.gserviceaccount.com"
+    node_pool_sa_account       = "terraform-custom-sa@test-project.iam.gserviceaccount.com"
 
     node_pool_oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform",

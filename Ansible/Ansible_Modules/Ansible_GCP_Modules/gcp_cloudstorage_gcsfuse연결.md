@@ -136,7 +136,7 @@ fi
 gcsfuse -v
 if [ $? -eq 0 ]; then
     mkdir -p /GCP_Storage
-    echo "gcp-in-ca-test-bucket-wocheon07 /GCP_Storage gcsfuse rw,_netdev,allow_other,uid=${gcsfuse_uid},gid=${gcsfuse_gid}" >> /etc/fstab
+    echo "test-project-test-bucket-wocheon07 /GCP_Storage gcsfuse rw,_netdev,allow_other,uid=${gcsfuse_uid},gid=${gcsfuse_gid}" >> /etc/fstab
     mount -a 
     ls -lrth /GCP_Storage
     df -Th
@@ -335,7 +335,7 @@ Credentials saved to file: [/root/.config/gcloud/application_default_credentials
 
 These credentials will be used by any library that requests Application Default Credentials (ADC).
 
-Quota project "gcp-in-ca" was added to ADC which can be used by Google client libraries for billing and quota. Note that some services may still bill the project owning the resource.
+Quota project "test-project" was added to ADC which can be used by Google client libraries for billing and quota. Note that some services may still bill the project owning the resource.
 
 
 $ ls -lrth /root/.config/gcloud/application_default_credentials.json

@@ -112,7 +112,7 @@ again to reinitialize your working directory.
           + licenses                       = (known after apply)
           + name                           = "gce-terraform-disk-test"
           + physical_block_size_bytes      = (known after apply)
-          + project                        = "gcp-in-ca"
+          + project                        = "test-project"
           + provisioned_iops               = (known after apply)
           + provisioned_throughput         = (known after apply)
           + self_link                      = (known after apply)
@@ -195,7 +195,7 @@ again to reinitialize your working directory.
           + licenses                       = (known after apply)    
           + name                           = "gce-terraform-disk-test"    
           + physical_block_size_bytes      = (known after apply)    
-          + project                        = "gcp-in-ca"    
+          + project                        = "test-project"    
           + provisioned_iops               = (known after apply)    
           + provisioned_throughput         = (known after apply)    
           + self_link                      = (known after apply)    
@@ -224,13 +224,13 @@ again to reinitialize your working directory.
 
     module.gce_disk.google_compute_disk.gce_disk: Creating...   
     module.gce_disk.google_compute_disk.gce_disk: Still creating... [10s    elapsed]
-    module.gce_disk.google_compute_disk.gce_disk: Creation complete after    11s [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+    module.gce_disk.google_compute_disk.gce_disk: Creation complete after    11s [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 
     Apply complete! Resources: 1 added, 0 changed, 0 destroyed.   
 
     Outputs:    
     gce_disk_id = "8881347988659615506"   
-    gce_disk_self_link = "https://www.googleapis.com/compute/v1/projects/   gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test"
+    gce_disk_self_link = "https://www.googleapis.com/compute/v1/projects/   test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test"
     ```
 
 - Workspace의 run에 Apply Run 자동 추가 
@@ -258,7 +258,7 @@ Waiting for the plan to start...
 Terraform v1.11.4
 on linux_amd64
 Initializing plugins and modules...
-module.gce_disk.google_compute_disk.gce_disk: Refreshing state... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+module.gce_disk.google_compute_disk.gce_disk: Refreshing state... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -276,7 +276,7 @@ Terraform will perform the following actions:
           - "user"                       = "wocheon07"
         } -> null
       - enable_confidential_compute    = false -> null
-      - id                             = "projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
+      - id                             = "projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
       - label_fingerprint              = "YfhV4VsbiLs=" -> null
       - labels                         = {
           - "type" = "gce-boot-disk"
@@ -285,10 +285,10 @@ Terraform will perform the following actions:
       - licenses                       = [] -> null
       - name                           = "gce-terraform-disk-test" -> null
       - physical_block_size_bytes      = 4096 -> null
-      - project                        = "gcp-in-ca" -> null
+      - project                        = "test-project" -> null
       - provisioned_iops               = 0 -> null
       - provisioned_throughput         = 0 -> null
-      - self_link                      = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
+      - self_link                      = "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
       - size                           = 20 -> null
       - terraform_labels               = {
           - "goog-terraform-provisioned" = "true"
@@ -305,9 +305,9 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
   - gce_disk_id        = "8881347988659615506" -> null
-  - gce_disk_self_link = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
+  - gce_disk_self_link = "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test" -> null
 
-module.gce_disk.google_compute_disk.gce_disk: Destroying... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+module.gce_disk.google_compute_disk.gce_disk: Destroying... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 module.gce_disk.google_compute_disk.gce_disk: Destruction complete after 1s
 
 Apply complete! Resources: 0 added, 0 changed, 1 destroyed.

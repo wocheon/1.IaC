@@ -94,7 +94,7 @@ packer {
 
 variable "project_id" {
   description = "GCP Project ID"
-  default     = "gcp-in-ca"
+  default     = "test-project"
 }
 
 variable "region" {
@@ -162,7 +162,7 @@ $ packer init
 > vi variables.pkr.hcl
 ```tf
 # Packer Configuration for Google Cloud Platform
-project_id = "gcp-in-ca"
+project_id = "test-project"
 region = "asia-northeast3"
 image_name = "packer-image-240911"
 network = "test-vpc-1"
@@ -230,7 +230,7 @@ Build 'googlecompute.example' finished after 3 minutes 10 seconds.
 ==> Wait completed after 3 minutes 10 seconds
 
 ==> Builds finished. The artifacts of successful builds are:
---> googlecompute.example: A disk image was created in the 'gcp-in-ca' project: packer-image-240911
+--> googlecompute.example: A disk image was created in the 'test-project' project: packer-image-240911
 ```
 
 ### Packer로 생성된 이미지 삭제 

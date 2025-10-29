@@ -33,7 +33,7 @@ $ gcloud init
 $ gcloud config configurations list 
 
 NAME     IS_ACTIVE  ACCOUNT                                             PROJECT    COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
-default  True       487401709675-compute@developer.gserviceaccount.com  gcp-in-ca  asia-northeast3-c     asia-northeast3
+default  True       487401709675-compute@developer.gserviceaccount.com  test-project  asia-northeast3-c     asia-northeast3
 ```
 
 
@@ -78,7 +78,7 @@ git clone https://github.com/terraform-google-modules/terraform-docs-samples.git
 
 ```ruby
 resource "google_compute_instance" "default" {
-  project = "gcp-in-ca"
+  project = "test-project"
   name         = "terraform-test-vm"
   machine_type = "e2-micro"
   zone         = "asia-northeast3-c"
@@ -92,7 +92,7 @@ resource "google_compute_instance" "default" {
   network_interface {
     network = "test-vpc-1"
     subnetwork = "test-vpc-sub-01"
-    subnetwork_project = "gcp-in-ca"
+    subnetwork_project = "test-project"
     network_ip = "192.168.1.104"
     access_config {
     }
@@ -127,7 +127,7 @@ Terraform will perform the following actions:
       + metadata_fingerprint = (known after apply)
       + min_cpu_platform     = (known after apply)
       + name                 = "terraform-test-vm"
-      + project              = "gcp-in-ca"
+      + project              = "test-project"
       + self_link            = (known after apply)
       + tags_fingerprint     = (known after apply)
       + terraform_labels     = {
@@ -162,7 +162,7 @@ Terraform will perform the following actions:
           + network_ip                  = "192.168.1.104"
           + stack_type                  = (known after apply)
           + subnetwork                  = "test-vpc-sub-01"
-          + subnetwork_project          = "gcp-in-ca"
+          + subnetwork_project          = "test-project"
 
           + access_config {
               + nat_ip       = (known after apply)
@@ -204,7 +204,7 @@ Terraform will perform the following actions:
       + metadata_fingerprint = (known after apply)
       + min_cpu_platform     = (known after apply)
       + name                 = "terraform-test-vm"
-      + project              = "gcp-in-ca"
+      + project              = "test-project"
       + self_link            = (known after apply)
       + tags_fingerprint     = (known after apply)
       + terraform_labels     = {
@@ -239,7 +239,7 @@ Terraform will perform the following actions:
           + network_ip                  = "192.168.1.104"
           + stack_type                  = (known after apply)
           + subnetwork                  = "test-vpc-sub-01"
-          + subnetwork_project          = "gcp-in-ca"
+          + subnetwork_project          = "test-project"
 
           + access_config {
               + nat_ip       = (known after apply)
@@ -252,7 +252,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 google_compute_instance.default: Creating...
 google_compute_instance.default: Still creating... [10s elapsed]
 google_compute_instance.default: Still creating... [20s elapsed]
-google_compute_instance.default: Creation complete after 28s [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm]
+google_compute_instance.default: Creation complete after 28s [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
@@ -279,7 +279,7 @@ $ terraform plan
 
   # google_compute_instance.default will be updated in-place
   ~ resource "google_compute_instance" "default" {
-        id                   = "projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm"
+        id                   = "projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm"
         name                 = "terraform-test-vm"
         tags                 = []
         # (19 unchanged attributes hidden)
@@ -311,11 +311,11 @@ $ terraform plan
           + ipv6_access_type            = (known after apply)
           + ipv6_address                = (known after apply)
           ~ name                        = "nic0" -> (known after apply)
-          ~ network                     = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/global/networks/test-vpc-1" -> "test-vpc-1"
+          ~ network                     = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-vpc-1" -> "test-vpc-1"
           ~ network_ip                  = "192.168.1.104" -> "192.168.1.102" # forces replacement
           - queue_count                 = 0 -> null
           ~ stack_type                  = "IPV4_ONLY" -> (known after apply)
-          ~ subnetwork                  = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/regions/asia-northeast3/subnetworks/test-vpc-sub-01" -> "test-vpc-sub-01"
+          ~ subnetwork                  = "https://www.googleapis.com/compute/v1/projects/test-project/regions/asia-northeast3/subnetworks/test-vpc-sub-01" -> "test-vpc-sub-01"
             # (1 unchanged attribute hidden)
 ...
 
@@ -329,7 +329,7 @@ Plan: 1 to add, 0 to change, 1 to destroy.
 
 ```sh
 $ terraform plan
-google_compute_instance.default: Refreshing state... [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm]
+google_compute_instance.default: Refreshing state... [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm]
 
 No changes. Your infrastructure matches the configuration.
 
@@ -341,7 +341,7 @@ Terraform has compared your real infrastructure against your configuration and f
 - terraform destroy를 통해 main.tf파일에 등록된 리소스를 삭제
 ```ruby
 terraform destroy
-google_compute_instance.default: Refreshing state... [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm]
+google_compute_instance.default: Refreshing state... [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -359,7 +359,7 @@ Terraform will perform the following actions:
           - "goog-terraform-provisioned" = "true"
         } -> null
       - enable_display       = false -> null
-      - id                   = "projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm" -> null
+      - id                   = "projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm" -> null
       - instance_id          = "449769163015383762" -> null
       - label_fingerprint    = "vezUS-42LLM=" -> null
       - labels               = {} -> null
@@ -367,9 +367,9 @@ Terraform will perform the following actions:
       - metadata             = {} -> null
       - metadata_fingerprint = "uT2yNdowjAI=" -> null
       - name                 = "terraform-test-vm" -> null
-      - project              = "gcp-in-ca" -> null
+      - project              = "test-project" -> null
       - resource_policies    = [] -> null
-      - self_link            = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm" -> null
+      - self_link            = "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm" -> null
       - tags                 = [] -> null
       - tags_fingerprint     = "42WmSpB8rSM=" -> null
       - terraform_labels     = {
@@ -386,10 +386,10 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-google_compute_instance.default: Destroying... [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm]
-google_compute_instance.default: Still destroying... [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm, 10s elapsed]
+google_compute_instance.default: Destroying... [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm]
+google_compute_instance.default: Still destroying... [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm, 10s elapsed]
 ...
-google_compute_instance.default: Still destroying... [id=projects/gcp-in-ca/zones/asia-northeast3-c/instances/terraform-test-vm, 1m50s elapsed]
+google_compute_instance.default: Still destroying... [id=projects/test-project/zones/asia-northeast3-c/instances/terraform-test-vm, 1m50s elapsed]
 google_compute_instance.default: Destruction complete after 1m52s
 
 Destroy complete! Resources: 1 destroyed.

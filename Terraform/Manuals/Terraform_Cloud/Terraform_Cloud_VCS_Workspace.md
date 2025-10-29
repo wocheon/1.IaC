@@ -87,7 +87,7 @@
 
         > terraform.tfvars
         ```hcl
-        project       = "gcp-in-ca"
+        project       = "test-project"
         region        = "asia-northeast3"
         zone          = "asia-northeast3-a"        
         new_disk_name = "gce-terraform-disk-test"

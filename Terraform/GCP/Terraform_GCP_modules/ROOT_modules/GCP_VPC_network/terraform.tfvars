@@ -1,5 +1,5 @@
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 
 vpc_network_name = "terraform-test-vpc"

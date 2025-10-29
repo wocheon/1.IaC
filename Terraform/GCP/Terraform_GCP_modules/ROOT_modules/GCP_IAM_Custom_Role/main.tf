@@ -12,7 +12,7 @@ terraform {
 provider "google" {
   project = var.project
   region  = var.region
-#  credentials = file("terraform-custom-sa@gcp-in-ca.iam.gserviceaccount.com.json")
+#  credentials = file("terraform-custom-sa@test-project.iam.gserviceaccount.com.json")
 }
 
 module "iam_custom_role" {

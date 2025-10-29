@@ -60,15 +60,15 @@ gcp_cred_kind: serviceaccount
 gcp_cred_file: ./service-account.json
 
 ### GCP Project & Regions ###
-gcp_project: gcp-in-ca
+gcp_project: test-project
 region: "asia-northeast1"
 zone: "asia-northeast1-a"
 
 ###disk###
 disk_name : worker-05
 disk_size : 20
-disk_image: projects/gcp-in-ca/global/images/ansible-image
-#disk_snapshot: projects/gcp-in-ca/global/snapshots/jenkins-snapshot-1
+disk_image: projects/test-project/global/images/ansible-image
+#disk_snapshot: projects/test-project/global/snapshots/jenkins-snapshot-1
 disk_state : present
 
 ###GCE_VM###
@@ -77,6 +77,6 @@ vm_name : worker-05
 machine_type : e2-micro
 
 ###GCE_VM_Network###
-network : projects/gcp-in-ca/global/networks/test-vpc-1
-subnetwork : projects/gcp-in-ca/regions/asia-northeast1/subnetworks/test-vpc-sub-03
+network : projects/test-project/global/networks/test-vpc-1
+subnetwork : projects/test-project/regions/asia-northeast1/subnetworks/test-vpc-sub-03
 vm_ip: 192.168.3.105

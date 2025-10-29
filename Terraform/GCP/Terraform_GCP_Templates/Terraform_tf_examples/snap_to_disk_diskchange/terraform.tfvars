@@ -1,4 +1,4 @@
-project_id      = "gcp-in-ca"
+project_id      = "test-project"
 region          = "asia-northeast3"
 zone            = "asia-northeast3-a"
 active_vm_name  = "active-vm"

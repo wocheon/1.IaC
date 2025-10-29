@@ -220,7 +220,7 @@ variable "new_disk_image_id" {
 > dev.tfvars
 ```tf
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 zone          = "asia-northeast3-a"
 
@@ -245,7 +245,7 @@ new_disk_snapshot_id    = null
 > prd.tfvars
 ```tf
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 zone          = "asia-northeast3-a"
 

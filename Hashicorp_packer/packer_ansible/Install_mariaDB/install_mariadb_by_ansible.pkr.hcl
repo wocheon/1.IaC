@@ -14,7 +14,7 @@ packer {
 
 variable "project_id" {
   description = "GCP Project ID"
-  default     = "gcp-in-ca"
+  default     = "test-project"
 }
 
 variable "region" {

@@ -2,7 +2,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-      gcp_project: gcp-in-ca
+      gcp_project: test-project
       gcp_cred_kind: serviceaccount
       gcp_cred_file: /etc/ansible/inventory/service-account.json
       zone: "asia-northeast1-a"
@@ -14,7 +14,7 @@
          name: 'ansible-disk-test'
          size_gb: 10
          #source_snapshot:
-         #  selfLink: "projects/gcp-in-ca/global/snapshots/gitlab-snapshot-1"
+         #  selfLink: "projects/test-project/global/snapshots/gitlab-snapshot-1"
          source_image: "projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20230817"
          zone: "{{ zone }}"
          project: "{{ gcp_project }}"

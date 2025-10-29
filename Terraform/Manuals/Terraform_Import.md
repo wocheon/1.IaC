@@ -25,7 +25,7 @@ terraform {
 }
 
 provider "google" {
-  project = "gcp-in-ca"
+  project = "test-project"
   region  = "asia-northeast3-a"
 }
 
@@ -40,7 +40,7 @@ resource "google_compute_engine" "example" {
 $ terraform init
 
 # 기본 형식 : terraform import [리소스 타입].[리소스명]
-$ terraform import google_compute_instance.example projects/gcp-in-ca/zones/asia-northeast3-a/instances/db1
+$ terraform import google_compute_instance.example projects/test-project/zones/asia-northeast3-a/instances/db1
 ```
 
 3. Import 된 리소스의 tfstate를 HCL 형식으로 표기 
@@ -109,7 +109,7 @@ terraform {
 }
 
 provider "google" {
-  project = "gcp-in-ca"
+  project = "test-project"
   region  = "asia-northeast3-a"
 }
 
@@ -124,12 +124,12 @@ resource "google_compute_disk" "test_disk" {
 ```sh
 $ terraform init 
 
-$ terraform import google_compute_disk.test_disk projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test
+$ terraform import google_compute_disk.test_disk projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test
 
-google_compute_disk.test_disk: Importing from ID "projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test"...
+google_compute_disk.test_disk: Importing from ID "projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test"...
 google_compute_disk.test_disk: Import prepared!
   Prepared google_compute_disk for import
-google_compute_disk.test_disk: Refreshing state... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+google_compute_disk.test_disk: Refreshing state... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 
 Import successful!
 ```
@@ -161,7 +161,7 @@ terraform {
 }
 
 provider "google" {
-  project = "gcp-in-ca"
+  project = "test-project"
   region  = "asia-northeast3-a"
 }
 
@@ -180,7 +180,7 @@ resource "google_compute_disk" "test_disk" {
     licenses                       = []
     name                           = "gce-terraform-disk-test"
     physical_block_size_bytes      = 4096
-    project                        = "gcp-in-ca"
+    project                        = "test-project"
     provisioned_iops               = 0
     provisioned_throughput         = 0
     size                           = 30
@@ -225,7 +225,7 @@ $ terraform plan
 
   # google_compute_disk.test_disk will be updated in-place
   ~ resource "google_compute_disk" "test_disk" {
-        id                             = "projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test"
+        id                             = "projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test"
       ~ labels                         = {
           + "terraform_imported" = "true"
         }
@@ -242,9 +242,9 @@ Plan: 0 to add, 1 to change, 0 to destroy.
 
 $ terraform apply --auto-approve 
 
-oogle_compute_disk.test_disk: Modifying... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
-google_compute_disk.test_disk: Still modifying... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test, 10s elapsed]
-google_compute_disk.test_disk: Modifications complete after 11s [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+oogle_compute_disk.test_disk: Modifying... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+google_compute_disk.test_disk: Still modifying... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test, 10s elapsed]
+google_compute_disk.test_disk: Modifications complete after 11s [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
@@ -255,7 +255,7 @@ Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```sh
 $ terraform destroy --auto-approve
 
-google_compute_disk.test_disk: Destroying... [id=projects/gcp-in-ca/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
+google_compute_disk.test_disk: Destroying... [id=projects/test-project/zones/asia-northeast3-a/disks/gce-terraform-disk-test]
 google_compute_disk.test_disk: Destruction complete after 1s
 
 Destroy complete! Resources: 1 destroyed.

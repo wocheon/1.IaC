@@ -1,5 +1,5 @@
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 zone          = "asia-northeast3-a"
 

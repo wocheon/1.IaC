@@ -61,7 +61,7 @@ packer {
 ```tf
 variable "project_id" {
   description = "GCP Project ID"
-  default     = "gcp-in-ca"
+  default     = "test-project"
 }
 
 variable "region" {
@@ -79,7 +79,7 @@ variable "zone" {
 
 ```tf
 # Packer Configuration for Google Cloud Platform
-project_id = "gcp-in-ca"
+project_id = "test-project"
 region = "asia-northeast3"
 image_name = "packer-image-240919"
 network = "test-vpc-1"
@@ -230,12 +230,12 @@ Build 'googlecompute.example' finished after 8 minutes 57 seconds.
 ==> Wait completed after 8 minutes 57 seconds
 
 ==> Builds finished. The artifacts of successful builds are:
---> googlecompute.example: A disk image was created in the 'gcp-in-ca' project: packer-image-240919
+--> googlecompute.example: A disk image was created in the 'test-project' project: packer-image-240919
 ```
 
 ### 이미지 생성 확인
 ```sh
 $ cloud compute images list --filter "(name:packer*)"
 NAME                 PROJECT    FAMILY           DEPRECATED  STATUS
-packer-image-240919  gcp-in-ca  my-image-family              READY
+packer-image-240919  test-project  my-image-family              READY
 ```

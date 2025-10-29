@@ -1,4 +1,4 @@
-gke_gcp_project           = "gcp-in-ca"
+gke_gcp_project           = "test-project"
 gke_cluster_name          = "test-gke-cluster"
 gke_version               = "1.30.9-gke.1009000"
 gke_zone                  = "asia-northeast3-a"

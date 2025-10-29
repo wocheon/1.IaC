@@ -1,5 +1,5 @@
 ### GCP Project&Region ###
-project       = "gcp-in-ca"
+project       = "test-project"
 region        = "asia-northeast3"
 zone          = "asia-northeast3-a"
 
@@ -65,7 +65,7 @@ network_tags = [
 
 ### Service Scpoes List ### 
 
-service_account = "terraform-custom-sa@gcp-in-ca.iam.gserviceaccount.com"
+service_account = "terraform-custom-sa@test-project.iam.gserviceaccount.com"
 
 #service_scope = "default"
 service_scope = "selected"

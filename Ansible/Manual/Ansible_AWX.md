@@ -347,7 +347,7 @@ mkdir manual_test
         #### Create new source
         |항목|값|
         |:-:|:-|
-        |Name| gcp-in-ca|
+        |Name| test-project|
         |Source| Google Compute Engine|
         - Source 선택시 자동으로 Credential 선택됨
 - Source에서 Credential 추가시 자동으로 Host 등록

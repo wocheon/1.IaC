@@ -211,11 +211,11 @@ total 4
 
 ```
 [root@master-01 ~]# ssh wocheon07@192.168.3.100
-Last login: Mon Jan 29 00:39:25 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
+Last login: Mon Jan 29 00:39:25 2024 from master-01.asia-northeast1-a.c.test-project.internal
 [wocheon07@master-01 ~]$ logout
 Connection to 192.168.3.100 closed.
 [root@master-01 ~]# ssh wocheon07@192.168.3.101
-Last login: Mon Jan 29 00:41:28 2024 from master-01.asia-northeast1-a.c.gcp-in-ca.internal
+Last login: Mon Jan 29 00:41:28 2024 from master-01.asia-northeast1-a.c.test-project.internal
 [wocheon07@worker-01 ~]$ logout
 Connection to 192.168.3.101 closed.
 [root@master-01 ~]# ssh wocheon07@192.168.3.102

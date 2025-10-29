@@ -1,5 +1,5 @@
 provider "google" {
-  project = "gcp-in-ca"
+  project = "test-project"
   region  = "asia-northeast3"
 }
 
@@ -12,7 +12,7 @@ resource "google_compute_instance" "example" {
 
   boot_disk {
     initialize_params {
-      image = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/global/images/centos-mariadb-image"
+      image = "https://www.googleapis.com/compute/v1/projects/test-project/global/images/centos-mariadb-image"
       size  = 20
       type  = "pd-standard"
       labels = {
@@ -23,8 +23,8 @@ resource "google_compute_instance" "example" {
   }
 
   network_interface {
-    network    = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/global/networks/test-vpc-1"
-    subnetwork = "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/regions/asia-northeast3/subnetworks/test-vpc-sub-01"
+    network    = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-vpc-1"
+    subnetwork = "https://www.googleapis.com/compute/v1/projects/test-project/regions/asia-northeast3/subnetworks/test-vpc-sub-01"
     access_config {
       network_tier = "PREMIUM"
     }

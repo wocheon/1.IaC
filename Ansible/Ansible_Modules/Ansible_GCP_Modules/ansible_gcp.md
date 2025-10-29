@@ -63,7 +63,7 @@ yum install -y python-requests python2-google-auth.noarch
 ```json
 {
   "type": "service_account",
-  "project_id": "gcp-in-ca",
+  "project_id": "test-project",
   ...
   ...
   ...
@@ -82,7 +82,7 @@ yum install -y python-requests python2-google-auth.noarch
 
   vars:
     service_account_file: service-account.json
-    project: gcp-in-ca
+    project: test-project
     auth_kind: serviceaccount
     scopes:
       - https://www.googleapis.com/auth/compute
@@ -136,7 +136,7 @@ mv /root/service-account.json inventory/
 ---
 plugin: gcp_compute
 projects:
-  - gcp-in-ca
+  - test-project
 auth_kind: serviceaccount
 service_account_file: /etc/ansible/inventory/service-account.json
 filters:
@@ -239,7 +239,7 @@ ansible-inventory --graph
   hosts: localhost
   gather_facts: false
   vars:
-      gcp_project: gcp-in-ca
+      gcp_project: test-project
       gcp_cred_kind: serviceaccount
       gcp_cred_file: /etc/ansible/inventory/service-account.json
       zone: "asia-northeast1-a"
@@ -251,7 +251,7 @@ ansible-inventory --graph
          name: 'ansible-disk-test'
          size_gb: 10
          #source_snapshot:
-         #  selfLink: "projects/gcp-in-ca/global/snapshots/gitlab-snapshot-1"
+         #  selfLink: "projects/test-project/global/snapshots/gitlab-snapshot-1"
          source_image: "projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20230817"
          zone: "{{ zone }}"
          project: "{{ gcp_project }}"
@@ -271,7 +271,7 @@ ansible-inventory --graph
   hosts: localhost
   gather_facts: false
   vars:
-      gcp_project: gcp-in-ca
+      gcp_project: test-project
       gcp_cred_kind: serviceaccount
       gcp_cred_file: /etc/ansible/inventory/service-account.json
       zone: "asia-northeast1-a"
@@ -294,12 +294,12 @@ ansible-inventory --graph
           boot: true
 #         source: "{{ disk }}"
           source:
-            selfLink: "projects/gcp-in-ca/zones/asia-northeast1-a/disks/ansible-disk-test"
+            selfLink: "projects/test-project/zones/asia-northeast1-a/disks/ansible-disk-test"
       network_interfaces:
         - network:
-            selfLink: "projects/gcp-in-ca/global/networks/test-vpc-1"
+            selfLink: "projects/test-project/global/networks/test-vpc-1"
           subnetwork:
-            selfLink: "projects/gcp-in-ca/regions/asia-northeast1/subnetworks/test-vpc-sub-03"
+            selfLink: "projects/test-project/regions/asia-northeast1/subnetworks/test-vpc-sub-03"
           access_configs:
             - name: External NAT
               type: ONE_TO_ONE_NAT
@@ -395,7 +395,7 @@ ansible-inventory --graph
   hosts: localhost
   gather_facts: false
   vars:
-      gcp_project: gcp-in-ca
+      gcp_project: test-project
       gcp_cred_kind: serviceaccount
       gcp_cred_file: /etc/ansible/inventory/service-account.json
       zone: "asia-northeast3-c"

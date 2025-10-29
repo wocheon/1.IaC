@@ -3,13 +3,13 @@ gcp_cred_kind: serviceaccount
 gcp_cred_file: ./service-account.json
 
 ### GCP Project & Regions ###
-gcp_project: gcp-in-ca
+gcp_project: test-project
 region: "asia-northeast1"
 zone: "asia-northeast1-a"
 
 ###GCE_VM_Network###
-network : projects/gcp-in-ca/global/networks/test-vpc-1
-subnetwork : projects/gcp-in-ca/regions/asia-northeast1/subnetworks/test-vpc-sub-03 #192.168.3.0/24
+network : projects/test-project/global/networks/test-vpc-1
+subnetwork : projects/test-project/regions/asia-northeast1/subnetworks/test-vpc-sub-03 #192.168.3.0/24
 
 ###GCE_VM_List###
 vm_list:
@@ -18,7 +18,7 @@ vm_list:
     machine_type: e2-small
     boot_disk_name: master-001
     boot_disk_size: 50
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: false
     vm_status: present
 
@@ -27,7 +27,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-01-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_status: present
 
@@ -36,7 +36,7 @@ vm_list:
 #    machine_type: e2-micro
 #    boot_disk_name: worker-02-001
 #    boot_disk_size: 20
-#    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+#    boot_disk_image: projects/test-project/global/images/ansible-image
 #    boot_disk_auto_delete: true
 #    vm_status: present
 #
@@ -45,7 +45,7 @@ vm_list:
 #    machine_type: e2-micro
 #    boot_disk_name: worker-03-001
 #    boot_disk_size: 20
-#    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+#    boot_disk_image: projects/test-project/global/images/ansible-image
 #    boot_disk_auto_delete: true
 #    vm_status: present
 #
@@ -54,7 +54,7 @@ vm_list:
 #    machine_type: e2-micro
 #    boot_disk_name: worker-04-001
 #    boot_disk_size: 20
-#    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+#    boot_disk_image: projects/test-project/global/images/ansible-image
 #    boot_disk_auto_delete: true
 #    vm_status: present
 #
@@ -63,6 +63,6 @@ vm_list:
 #    machine_type: e2-micro
 #    boot_disk_name: worker-05-001
 #    boot_disk_size: 20
-#    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+#    boot_disk_image: projects/test-project/global/images/ansible-image
 #    boot_disk_auto_delete: true
 #    vm_status: present

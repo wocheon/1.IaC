@@ -2,7 +2,7 @@
 
 variable "project" {
   type        = string
-  default     = "gcp-in-ca"
+  default     = "test-project"
 }
 
 variable "region" {

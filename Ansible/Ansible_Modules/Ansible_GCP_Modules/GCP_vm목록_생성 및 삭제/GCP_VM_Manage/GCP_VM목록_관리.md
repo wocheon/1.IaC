@@ -60,7 +60,7 @@ yum install -y python-requests python2-google-auth.noarch
 ```json
 {
   "type": "service_account",
-  "project_id": "gcp-in-ca",
+  "project_id": "test-project",
   ...
   ...
   ...
@@ -76,7 +76,7 @@ yum install -y python-requests python2-google-auth.noarch
   hosts: localhost
   gather_facts: false
   vars:
-      gcp_project: gcp-in-ca
+      gcp_project: test-project
       gcp_cred_kind: serviceaccount
       gcp_cred_file: "{{ playbook_dir }}/service-account.json"
       zone: "asia-northeast3-c"
@@ -139,7 +139,7 @@ ok: [127.0.0.1] => {
                     "https://www.googleapis.com/compute/v1/projects/centos-cloud/global/licenses/centos-7"
                 ],
                 "mode": "READ_WRITE",
-                "source": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-c/disks/gcp-ansible-test",
+                "source": "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-c/disks/gcp-ansible-test",
                 "type": "PERSISTENT"
             }
         ],
@@ -156,7 +156,7 @@ ok: [127.0.0.1] => {
         },
         "lastStartTimestamp": "2024-01-29T23:44:24.536-08:00",
         "lastStopTimestamp": "2024-01-29T00:51:11.517-08:00",
-        "machineType": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-c/machineTypes/e2-medium",
+        "machineType": "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-c/machineTypes/e2-medium",
         "metadata": {
             "fingerprint": "MlOSYzT9nK8=",
             "items": [
@@ -182,10 +182,10 @@ ok: [127.0.0.1] => {
                 "fingerprint": "yZh4r01m8Dw=",
                 "kind": "compute#networkInterface",
                 "name": "nic0",
-                "network": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/global/networks/test-vpc-1",
+                "network": "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-vpc-1",
                 "networkIP": "192.168.1.21",
                 "stackType": "IPV4_ONLY",
-                "subnetwork": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/regions/asia-northeast3/subnetworks/test-vpc-sub-01"
+                "subnetwork": "https://www.googleapis.com/compute/v1/projects/test-project/regions/asia-northeast3/subnetworks/test-vpc-sub-01"
             }
         ],
         "reservationAffinity": {
@@ -197,7 +197,7 @@ ok: [127.0.0.1] => {
             "preemptible": false,
             "provisioningModel": "STANDARD"
         },
-        "selfLink": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-c/instances/gcp-ansible-test",
+        "selfLink": "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-c/instances/gcp-ansible-test",
         "serviceAccounts": [
             {
                 "email": "487401709675-compute@developer.gserviceaccount.com",
@@ -224,7 +224,7 @@ ok: [127.0.0.1] => {
         "tags": {
             "fingerprint": "42WmSpB8rSM="
         },
-        "zone": "https://www.googleapis.com/compute/v1/projects/gcp-in-ca/zones/asia-northeast3-c"
+        "zone": "https://www.googleapis.com/compute/v1/projects/test-project/zones/asia-northeast3-c"
     }
 }
 
@@ -252,13 +252,13 @@ gcp_cred_kind: serviceaccount
 gcp_cred_file: service-account.json
 
 ### GCP Project & Regions ###
-gcp_project: gcp-in-ca
+gcp_project: test-project
 region: "asia-northeast1"
 zone: "asia-northeast1-a"
 
 ###GCE_VM_Network###
-network : projects/gcp-in-ca/global/networks/test-vpc-1
-subnetwork : projects/gcp-in-ca/regions/asia-northeast1/subnetworks/test-vpc-sub-03 #192.168.3.0/24
+network : projects/test-project/global/networks/test-vpc-1
+subnetwork : projects/test-project/regions/asia-northeast1/subnetworks/test-vpc-sub-03 #192.168.3.0/24
 
 ###GCE_VM_List###
 vm_list:
@@ -267,7 +267,7 @@ vm_list:
     machine_type: e2-small
     boot_disk_name: master-001
     boot_disk_size: 50
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: false
     vm_onoff: absent
     vm_status: absent
@@ -277,7 +277,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-01-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: present
     vm_status: RUNNING
@@ -287,7 +287,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-02-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: present
     vm_status: TERMINATED
@@ -297,7 +297,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-03-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -307,7 +307,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-04-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -317,7 +317,7 @@ vm_list:
     machine_type: e2-micro
     boot_disk_name: worker-05-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -403,20 +403,20 @@ tem.boot_disk_name }}"
 PLAY [Create an instance] ***************************************************************************************************************************************
 
 TASK [create a disk] ********************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': _onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status''vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': _onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status''vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 TASK [create vm] ************************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': _onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_sto', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_sticro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': _onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_sto', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_sticro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 PLAY RECAP ******************************************************************************************************************************************************
 127.0.0.1                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
@@ -426,20 +426,20 @@ PLAY RECAP *********************************************************************
 PLAY [Create an instance] ***************************************************************************
 
 TASK [create a disk] ********************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.                                                            168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small',                                                             u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot                                                            _disk_size': 50})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro                                                            ', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'                                                            boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'TERMINATED', u'machine_type': u'e2-mi                                                            cro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image',                                                             u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.                                                            168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small',                                                             u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot                                                            _disk_size': 50})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro                                                            ', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'                                                            boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'TERMINATED', u'machine_type': u'e2-mi                                                            cro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image',                                                             u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
 
 TASK [create vm] ************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.                                                            168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small',                                                             u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot                                                            _disk_size': 50})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'                                                            192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-                                                            micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image                                                            ', u'boot_disk_size': 20})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'                                                            192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'TERMINATED', u'machine_type': u'                                                            e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-im                                                            age', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.                                                            168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small',                                                             u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot                                                            _disk_size': 50})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'                                                            192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-                                                            micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image                                                            ', u'boot_disk_size': 20})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'                                                            192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'TERMINATED', u'machine_type': u'                                                            e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-im                                                            age', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.1                                                            68.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro'                                                            , u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'bo                                                            ot_disk_size': 20})
 
 PLAY RECAP ******************************************************************************************
 127.0.0.1                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0                                                                ignored=0
@@ -477,7 +477,7 @@ PLAY RECAP *********************************************************************
     machine_type: e2-micro
     boot_disk_name: worker-01-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -489,7 +489,7 @@ PLAY RECAP *********************************************************************
     machine_type: e2-micro
     boot_disk_name: worker-02-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -505,20 +505,20 @@ PLAY RECAP *********************************************************************
 PLAY [Create an instance] ************************************************************************************************************************************************************************************
 
 TASK [create a disk] *****************************************************************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 TASK [create vm] *********************************************************************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'RUNNING', u'machine_type': u'e2-micro', u'vm_onoff': u'present', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 PLAY RECAP ***************************************************************************************************************************************************************************************************
 127.0.0.1                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
@@ -539,7 +539,7 @@ PLAY RECAP *********************************************************************
     machine_type: e2-micro
     boot_disk_name: worker-01-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -551,7 +551,7 @@ PLAY RECAP *********************************************************************
     machine_type: e2-micro
     boot_disk_name: worker-02-001
     boot_disk_size: 20
-    boot_disk_image: projects/gcp-in-ca/global/images/ansible-image
+    boot_disk_image: projects/test-project/global/images/ansible-image
     boot_disk_auto_delete: true
     vm_onoff: absent
     vm_status: absent
@@ -609,20 +609,20 @@ PLAY RECAP *********************************************************************
 PLAY [delete vm instances] ******************************************************************************************************************************************
 
 TASK [delete instances] *********************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+changed: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 TASK [delete remain boot disk] **************************************************************************************************************************************
-ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 50})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
-ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/gcp-in-ca/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'master-01', u'boot_disk_auto_delete': False, u'vm_ip': u'192.168.3.100', u'boot_disk_name': u'master-001', u'vm_status': u'absent', u'machine_type': u'e2-small', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 50})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-01', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.101', u'boot_disk_name': u'worker-01-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-02', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.102', u'boot_disk_name': u'worker-02-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-03', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.103', u'boot_disk_name': u'worker-03-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-04', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.104', u'boot_disk_name': u'worker-04-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
+ok: [127.0.0.1] => (item={u'vm_name': u'worker-05', u'boot_disk_auto_delete': True, u'vm_ip': u'192.168.3.105', u'boot_disk_name': u'worker-05-001', u'vm_status': u'absent', u'machine_type': u'e2-micro', u'vm_onoff': u'absent', u'boot_disk_image': u'projects/test-project/global/images/ansible-image', u'boot_disk_size': 20})
 
 PLAY RECAP **********************************************************************************************************************************************************
 127.0.0.1                  : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
