@@ -1,0 +1,112 @@
+---
+- name: Remove conflicting Docker packages on RedHat family
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+
+- name: Install prerequisites on RedHat family
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+      - ca-certificates
+      - curl
+    state: present
+
+- name: Configure Docker yum repository on RedHat family
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "https://download.docker.com/linux/rhel/$releasever/$basearch/{{ docker_repo_channel }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://download.docker.com/linux/rhel/gpg
+
+- name: Refresh dnf metadata on RedHat family
+  ansible.builtin.dnf:
+    update_cache: true
+
+- name: List available Docker CE package versions on RedHat family
+  ansible.builtin.shell: |
+    set -o pipefail
+    dnf list docker-ce --showduplicates 2>/dev/null | awk '/docker-ce/ { print $2 }' | sort -Vr
+  args:
+    executable: /bin/bash
+  register: docker_versions_redhat
+  changed_when: false
+
+- name: Select matching Docker CE package version on RedHat family
+  ansible.builtin.set_fact:
+    docker_package_version: >-
+      {{
+        docker_versions_redhat.stdout_lines
+        | select('search', '^([0-9]+:)?' ~ (docker_version | regex_escape) ~ '-')
+        | list
+        | first
+        | default('')
+      }}
+  when: docker_version | length > 0
+
+- name: Print selected Docker package version on RedHat family
+  ansible.builtin.debug:
+    msg:
+      - "Requested Docker version: {{ docker_version }}"
+      - "Selected Docker package version: {{ docker_package_version | default('latest', true) }}"
+  when: docker_version | length > 0
+
+- name: Install requested Docker version on RedHat family
+  ansible.builtin.dnf:
+    name:
+      - "docker-ce-{{ docker_package_version }}"
+      - "docker-ce-cli-{{ docker_package_version }}"
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    allow_downgrade: true
+  when:
+    - docker_version | length > 0
+    - docker_package_version | default('') | length > 0
+
+- name: Install latest Docker version on RedHat family
+  ansible.builtin.dnf:
+    name: "{{ docker_packages_redhat }}"
+    state: latest
+  when:
+    - docker_version | length == 0 or
+      (
+        (docker_package_version | default('') | length == 0) and
+        docker_install_latest_when_version_unavailable | bool
+      )
+
+- name: Fail when requested Docker version is unavailable on RedHat family and fallback is disabled
+  ansible.builtin.fail:
+    msg: >-
+      Requested Docker version {{ docker_version }} is not available for this RedHat-family host.
+      Available package versions are: {{ docker_versions_redhat.stdout_lines }}
+  when:
+    - docker_version | length > 0
+    - docker_package_version | default('') | length == 0
+    - not (docker_install_latest_when_version_unavailable | bool)
+
+- name: Enable and start containerd service on RedHat family
+  ansible.builtin.systemd_service:
+    name: containerd
+    enabled: true
+    state: started
+
+- name: Enable and start Docker service on RedHat family
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started

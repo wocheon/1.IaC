@@ -1,0 +1,32 @@
+---
+# 사람이 지정하는 Docker Engine 버전
+# 예: "28.5.1"
+# 빈 값이면 repository의 최신 버전을 설치합니다.
+docker_version: "28.5.1"
+
+# 지정 버전이 repository에 없을 때 최신 버전으로 fallback
+docker_install_latest_when_version_unavailable: true
+
+# Docker daemon data-root
+docker_data_root: "/data/docker"
+
+# containerd root/state 경로
+containerd_root: "/data/containerd"
+containerd_state: "/run/containerd"
+
+# Docker repository channel
+docker_repo_channel: "stable"
+
+docker_packages_debian:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+docker_packages_redhat:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin

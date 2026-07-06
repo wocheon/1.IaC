@@ -1,0 +1,60 @@
+---
+- name: Check Docker client and server version
+  ansible.builtin.command: docker version
+  register: docker_version_result
+  changed_when: false
+
+- name: Check installed Docker server version
+  ansible.builtin.shell: |
+    docker version --format '{{ "{{ .Server.Version }}" }}'
+  args:
+    executable: /bin/bash
+  register: installed_docker_server_version
+  changed_when: false
+
+- name: Check Docker data-root
+  ansible.builtin.shell: |
+    docker info --format '{{ "{{ .DockerRootDir }}" }}'
+  args:
+    executable: /bin/bash
+  register: docker_root_result
+  changed_when: false
+
+- name: Check containerd config root and state
+  ansible.builtin.shell: |
+    grep -E '^(root|state) =' /etc/containerd/config.toml
+  args:
+    executable: /bin/bash
+  register: containerd_root_result
+  changed_when: false
+
+- name: Print Docker version
+  ansible.builtin.debug:
+    msg: "{{ docker_version_result.stdout_lines }}"
+
+- name: Print installed Docker server version
+  ansible.builtin.debug:
+    msg:
+      - "Requested Docker version: {{ docker_version | default('latest', true) }}"
+      - "Installed Docker server version: {{ installed_docker_server_version.stdout }}"
+
+- name: Print Docker root directory
+  ansible.builtin.debug:
+    msg:
+      - "DockerRootDir={{ docker_root_result.stdout }}"
+      - "Expected DockerRootDir={{ docker_data_root }}"
+
+- name: Print containerd root and state
+  ansible.builtin.debug:
+    msg: "{{ containerd_root_result.stdout_lines }}"
+
+- name: Warn when fallback latest version was installed
+  ansible.builtin.debug:
+    msg: >-
+      Requested Docker version {{ docker_version }} was not available.
+      Latest available Docker version was installed instead:
+      {{ installed_docker_server_version.stdout }}
+  when:
+    - docker_version | length > 0
+    - docker_package_version | default('') | length == 0
+    - docker_install_latest_when_version_unavailable | bool

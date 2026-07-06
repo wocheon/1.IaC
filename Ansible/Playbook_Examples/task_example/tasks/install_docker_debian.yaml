@@ -1,0 +1,136 @@
+---
+- name: Remove conflicting Docker packages on Debian family
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+
+- name: Install prerequisites on Debian family
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Create Docker apt keyring directory on Debian family
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download Docker GPG key on Debian family
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure Docker apt repository on Debian family
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ docker_apt_arch }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} {{ docker_repo_channel }}
+    filename: docker
+    state: present
+    update_cache: true
+  vars:
+    docker_apt_arch: >-
+      {{
+        {
+          'x86_64': 'amd64',
+          'aarch64': 'arm64',
+          'armv7l': 'armhf',
+          'ppc64le': 'ppc64el',
+          's390x': 's390x'
+        }.get(ansible_architecture, ansible_architecture)
+      }}
+
+- name: List available Docker CE package versions on Debian family
+  ansible.builtin.shell: |
+    set -o pipefail
+    apt-cache madison docker-ce | awk '{ print $3 }'
+  args:
+    executable: /bin/bash
+  register: docker_versions_debian
+  changed_when: false
+
+- name: Select matching Docker CE package version on Debian family
+  ansible.builtin.set_fact:
+    docker_package_version: >-
+      {{
+        docker_versions_debian.stdout_lines
+        | select('search', '^([0-9]+:)?' ~ (docker_version | regex_escape) ~ '[-~]')
+        | list
+        | first
+        | default('')
+      }}
+  when: docker_version | length > 0
+
+- name: Print selected Docker package version on Debian family
+  ansible.builtin.debug:
+    msg:
+      - "Requested Docker version: {{ docker_version }}"
+      - "Selected Docker package version: {{ docker_package_version | default('latest', true) }}"
+  when: docker_version | length > 0
+
+- name: Install requested Docker version on Debian family
+  ansible.builtin.apt:
+    name:
+      - "docker-ce={{ docker_package_version }}"
+      - "docker-ce-cli={{ docker_package_version }}"
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    allow_downgrade: true
+    update_cache: true
+  when:
+    - docker_version | length > 0
+    - docker_package_version | default('') | length > 0
+
+- name: Install latest Docker version on Debian family
+  ansible.builtin.apt:
+    name: "{{ docker_packages_debian }}"
+    state: latest
+    update_cache: true
+  when:
+    - docker_version | length == 0 or
+      (
+        (docker_package_version | default('') | length == 0) and
+        docker_install_latest_when_version_unavailable | bool
+      )
+
+- name: Fail when requested Docker version is unavailable on Debian family and fallback is disabled
+  ansible.builtin.fail:
+    msg: >-
+      Requested Docker version {{ docker_version }} is not available for this Debian-family host.
+      Available package versions are: {{ docker_versions_debian.stdout_lines }}
+  when:
+    - docker_version | length > 0
+    - docker_package_version | default('') | length == 0
+    - not (docker_install_latest_when_version_unavailable | bool)
+
+- name: Enable and start containerd service on Debian family
+  ansible.builtin.systemd_service:
+    name: containerd
+    enabled: true
+    state: started
+
+- name: Enable and start Docker service on Debian family
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started

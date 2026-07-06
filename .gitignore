@@ -1,0 +1,9 @@
+# 편집 임시파일 제외
+*.swp
+# 워드 문서 제외
+*.docx
+# Agents.md 제외
+AGENTS.md
+# Codex Agent 용 디렉토리 제외
+.agents/
+.codex/
