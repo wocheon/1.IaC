@@ -488,6 +488,42 @@ role/nginx/
 
 템플릿(Template)은 Jinja2 문법으로 동적 파일이나 메시지를 만든다. OS, 포트, 경로, 서비스명처럼 환경마다 달라지는 값을 변수로 받아 설정 파일을 생성할 때 유용하다.
 
+예를 들어 Nginx 설정 파일을 서버별 변수로 렌더링하려면 `templates/nginx.conf.j2`를 다음처럼 작성할 수 있다.
+
+```jinja
+server {
+    listen {{ nginx_port }};
+    server_name {{ server_name }};
+
+    root {{ document_root }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+이 템플릿은 플레이북에서 변수와 함께 배포한다.
+
+```yaml
+vars:
+  nginx_port: 80
+  server_name: example.internal
+  document_root: /usr/share/nginx/html
+
+tasks:
+  - name: deploy nginx config from template
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/conf.d/app.conf
+      owner: root
+      group: root
+      mode: "0644"
+    notify:
+      - restart nginx
+```
+
 핸들러(Handler)는 변경이 발생했을 때만 실행되는 후속 작업이다.
 
 ```yaml
