@@ -1,12 +1,12 @@
 ---
 - name: Stop Docker before changing data-root
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: docker
     state: stopped
   failed_when: false
 
 - name: Create Docker data-root directory
-  ansible.builtin.file:
+  file:
     path: "{{ docker_data_root }}"
     state: directory
     owner: root
@@ -14,7 +14,7 @@
     mode: "0711"
 
 - name: Create Docker config directory
-  ansible.builtin.file:
+  file:
     path: /etc/docker
     state: directory
     owner: root
@@ -22,17 +22,10 @@
     mode: "0755"
 
 - name: Configure Docker daemon data-root
-  ansible.builtin.copy:
+  template:
+    src: daemon.json.j2
     dest: /etc/docker/daemon.json
     owner: root
     group: root
     mode: "0644"
-    content: |
-      {
-        "data-root": "{{ docker_data_root }}",
-        "log-driver": "json-file",
-        "log-opts": {
-          "max-size": "100m",
-          "max-file": "3"
-        }
-      }
+

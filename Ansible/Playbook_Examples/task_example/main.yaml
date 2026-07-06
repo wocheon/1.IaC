@@ -9,7 +9,7 @@
 
   pre_tasks:
     - name: Validate supported OS family
-      ansible.builtin.assert:
+      assert:
         that:
           - ansible_os_family in ["Debian", "RedHat"]
         fail_msg: >-
@@ -17,7 +17,7 @@
           This playbook supports Debian and RedHat OS families.
 
     - name: Print selected Docker install settings
-      ansible.builtin.debug:
+      debug:
         msg:
           - "OS family: {{ ansible_os_family }}"
           - "Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}"
@@ -28,18 +28,18 @@
 
   tasks:
     - name: Include Debian-family Docker installation tasks
-      ansible.builtin.include_tasks: tasks/install_docker_debian.yaml
+      include_tasks: tasks/install_docker_debian.yaml
       when: ansible_os_family == "Debian"
 
     - name: Include RedHat-family Docker installation tasks
-      ansible.builtin.include_tasks: tasks/install_docker_redhat.yaml
+      include_tasks: tasks/install_docker_redhat.yaml
       when: ansible_os_family == "RedHat"
 
     - name: Include Docker root configuration tasks
-      ansible.builtin.include_tasks: tasks/configure_docker_root.yaml
+      include_tasks: tasks/configure_docker_root.yaml
 
     - name: Include containerd root configuration tasks
-      ansible.builtin.include_tasks: tasks/configure_containerd_root.yaml
+      include_tasks: tasks/configure_containerd_root.yaml
 
     - name: Include Docker verification tasks
-      ansible.builtin.include_tasks: tasks/verify_docker.yaml
+      include_tasks: tasks/verify_docker.yaml

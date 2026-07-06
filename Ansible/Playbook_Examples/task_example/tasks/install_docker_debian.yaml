@@ -1,6 +1,6 @@
 ---
 - name: Remove conflicting Docker packages on Debian family
-  ansible.builtin.apt:
+  apt:
     name:
       - docker.io
       - docker-compose
@@ -12,7 +12,7 @@
     state: absent
 
 - name: Install prerequisites on Debian family
-  ansible.builtin.apt:
+  apt:
     name:
       - ca-certificates
       - curl
@@ -21,7 +21,7 @@
     update_cache: true
 
 - name: Create Docker apt keyring directory on Debian family
-  ansible.builtin.file:
+  file:
     path: /etc/apt/keyrings
     state: directory
     owner: root
@@ -29,7 +29,7 @@
     mode: "0755"
 
 - name: Download Docker GPG key on Debian family
-  ansible.builtin.get_url:
+  get_url:
     url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
     dest: /etc/apt/keyrings/docker.asc
     owner: root
@@ -37,7 +37,7 @@
     mode: "0644"
 
 - name: Configure Docker apt repository on Debian family
-  ansible.builtin.apt_repository:
+  apt_repository:
     repo: >-
       deb [arch={{ docker_apt_arch }}
       signed-by=/etc/apt/keyrings/docker.asc]
@@ -59,7 +59,7 @@
       }}
 
 - name: List available Docker CE package versions on Debian family
-  ansible.builtin.shell: |
+  shell: |
     set -o pipefail
     apt-cache madison docker-ce | awk '{ print $3 }'
   args:
@@ -68,7 +68,7 @@
   changed_when: false
 
 - name: Select matching Docker CE package version on Debian family
-  ansible.builtin.set_fact:
+  set_fact:
     docker_package_version: >-
       {{
         docker_versions_debian.stdout_lines
@@ -80,14 +80,14 @@
   when: docker_version | length > 0
 
 - name: Print selected Docker package version on Debian family
-  ansible.builtin.debug:
+  debug:
     msg:
       - "Requested Docker version: {{ docker_version }}"
       - "Selected Docker package version: {{ docker_package_version | default('latest', true) }}"
   when: docker_version | length > 0
 
 - name: Install requested Docker version on Debian family
-  ansible.builtin.apt:
+  apt:
     name:
       - "docker-ce={{ docker_package_version }}"
       - "docker-ce-cli={{ docker_package_version }}"
@@ -102,7 +102,7 @@
     - docker_package_version | default('') | length > 0
 
 - name: Install latest Docker version on Debian family
-  ansible.builtin.apt:
+  apt:
     name: "{{ docker_packages_debian }}"
     state: latest
     update_cache: true
@@ -114,7 +114,7 @@
       )
 
 - name: Fail when requested Docker version is unavailable on Debian family and fallback is disabled
-  ansible.builtin.fail:
+  fail:
     msg: >-
       Requested Docker version {{ docker_version }} is not available for this Debian-family host.
       Available package versions are: {{ docker_versions_debian.stdout_lines }}
@@ -124,13 +124,13 @@
     - not (docker_install_latest_when_version_unavailable | bool)
 
 - name: Enable and start containerd service on Debian family
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: containerd
     enabled: true
     state: started
 
 - name: Enable and start Docker service on Debian family
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: docker
     enabled: true
     state: started

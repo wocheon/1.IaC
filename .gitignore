@@ -7,3 +7,4 @@ AGENTS.md
 # Codex Agent 용 디렉토리 제외
 .agents/
 .codex/
+codex-goals/

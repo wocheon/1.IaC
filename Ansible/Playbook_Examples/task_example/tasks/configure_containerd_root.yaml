@@ -1,12 +1,12 @@
 ---
 - name: Stop containerd before changing root
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: containerd
     state: stopped
   failed_when: false
 
 - name: Create containerd root directory
-  ansible.builtin.file:
+  file:
     path: "{{ containerd_root }}"
     state: directory
     owner: root
@@ -14,7 +14,7 @@
     mode: "0711"
 
 - name: Create containerd state directory
-  ansible.builtin.file:
+  file:
     path: "{{ containerd_state }}"
     state: directory
     owner: root
@@ -22,7 +22,7 @@
     mode: "0711"
 
 - name: Create containerd config directory
-  ansible.builtin.file:
+  file:
     path: /etc/containerd
     state: directory
     owner: root
@@ -30,36 +30,36 @@
     mode: "0755"
 
 - name: Generate default containerd config when missing
-  ansible.builtin.shell: |
+  shell: |
     containerd config default > /etc/containerd/config.toml
   args:
     executable: /bin/bash
     creates: /etc/containerd/config.toml
 
 - name: Configure containerd root path
-  ansible.builtin.replace:
+  replace:
     path: /etc/containerd/config.toml
     regexp: '^root = .*$'
     replace: 'root = "{{ containerd_root }}"'
 
 - name: Configure containerd state path
-  ansible.builtin.replace:
+  replace:
     path: /etc/containerd/config.toml
     regexp: '^state = .*$'
     replace: 'state = "{{ containerd_state }}"'
 
 - name: Reload systemd daemon
-  ansible.builtin.systemd_service:
+  systemd_service:
     daemon_reload: true
 
 - name: Start and enable containerd
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: containerd
     enabled: true
     state: restarted
 
 - name: Start and enable Docker
-  ansible.builtin.systemd_service:
+  systemd_service:
     name: docker
     enabled: true
     state: restarted
