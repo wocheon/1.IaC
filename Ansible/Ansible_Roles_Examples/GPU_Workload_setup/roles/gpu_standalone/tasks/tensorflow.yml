@@ -1,0 +1,19 @@
+---
+# ==========================================================================
+# TensorFlow 설치 (virtualenv)
+#
+# tensorflow[and-cuda] extra 를 사용하면 CUDA / cuDNN 라이브러리가
+# pip wheel 로 함께 설치되므로 호스트 cuDNN 설치가 필요하지 않다.
+# 재현성이 필요한 운영 환경에서는 tensorflow_version 을 반드시 고정한다.
+# ==========================================================================
+
+- name: "TensorFlow 설치 대상 패키지 계산"
+  ansible.builtin.set_fact:
+    _gpu_tensorflow_requirement: >-
+      {{ tensorflow_package }}{{ '==' ~ tensorflow_version if tensorflow_version | length > 0 else '' }}
+
+- name: "TensorFlow 설치 ({{ _gpu_tensorflow_requirement }})"
+  ansible.builtin.pip:
+    name: "{{ _gpu_tensorflow_requirement }}"
+    state: present
+    virtualenv: "{{ gpu_python_venv_path }}"

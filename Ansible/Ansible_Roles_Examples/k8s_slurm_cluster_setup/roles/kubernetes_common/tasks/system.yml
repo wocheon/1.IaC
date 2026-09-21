@@ -1,0 +1,46 @@
+---
+- name: "필수 커널 모듈 영구 설정"
+  ansible.builtin.template:
+    src: kubernetes-modules.conf.j2
+    dest: /etc/modules-load.d/kubernetes.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "필수 커널 모듈 로드"
+  ansible.builtin.command: "modprobe {{ item }}"
+  loop: "{{ kubernetes_required_kernel_modules }}"
+  changed_when: false
+
+- name: "Kubernetes sysctl 설정"
+  ansible.builtin.template:
+    src: kubernetes-sysctl.conf.j2
+    dest: /etc/sysctl.d/99-kubernetes.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload kubernetes sysctl
+
+- name: "현재 swap 비활성화"
+  ansible.builtin.command: swapoff -a
+  when:
+    - kubernetes_disable_swap | bool
+    - ansible_swaptotal_mb | int > 0
+  changed_when: true
+
+- name: "fstab의 swap 항목 비활성화"
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#\n]+\s+\S+\s+swap\s+.*)$'
+    replace: '# \1 # disabled by kubernetes_common'
+    backup: true
+  when: kubernetes_disable_swap | bool
+
+- name: "노드별 kubelet 인자 설정"
+  ansible.builtin.template:
+    src: kubelet-default.j2
+    dest: /etc/default/kubelet
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart kubelet

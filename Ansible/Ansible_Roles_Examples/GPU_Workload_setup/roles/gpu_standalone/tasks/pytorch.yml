@@ -1,0 +1,23 @@
+---
+# ==========================================================================
+# PyTorch 설치 (virtualenv)
+#
+# CUDA wheel 인덱스(pytorch_index_url)를 통해 설치하므로
+# CUDA runtime / cuDNN 은 wheel 에 포함된다.
+# 재현성이 필요한 운영 환경에서는 pytorch_version 을 반드시 고정한다.
+# ==========================================================================
+
+- name: "PyTorch 설치 대상 패키지 계산"
+  ansible.builtin.set_fact:
+    _gpu_pytorch_requirements: >-
+      {{ pytorch_packages
+         | map('regex_replace', '^torch$', 'torch==' ~ pytorch_version)
+         | list
+         if pytorch_version | length > 0 else pytorch_packages }}
+
+- name: "PyTorch 설치 ({{ _gpu_pytorch_requirements | join(', ') }})"
+  ansible.builtin.pip:
+    name: "{{ _gpu_pytorch_requirements }}"
+    state: present
+    virtualenv: "{{ gpu_python_venv_path }}"
+    extra_args: "--index-url {{ pytorch_index_url }}"

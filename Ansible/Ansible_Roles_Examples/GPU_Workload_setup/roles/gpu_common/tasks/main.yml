@@ -1,0 +1,79 @@
+---
+- name: "공통 GPU Role 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in gpu_supported_distributions
+      - ansible_facts['distribution_version'] in gpu_supported_ubuntu_versions
+      - ansible_facts['architecture'] in gpu_supported_architectures
+      - nvidia_driver_flavor in ['', '-open']
+      - nvidia_driver_source in ['cuda_repo', 'distro']
+    fail_msg: >-
+      지원 환경은 Ubuntu {{ gpu_supported_ubuntu_versions | join(' / ') }},
+      {{ gpu_supported_architectures | join(' / ') }} 입니다.
+      nvidia_driver_flavor와 nvidia_driver_source 값도 확인하세요.
+      감지된 환경: {{ ansible_facts['distribution'] }}
+      {{ ansible_facts['distribution_version'] }} ({{ ansible_facts['architecture'] }})
+    quiet: true
+
+- name: "공통 GPU 구성 요약"
+  ansible.builtin.debug:
+    msg:
+      - "nvidia driver            : {{ gpu_common_install_driver | bool }}"
+      - "cuda toolkit             : {{ gpu_common_install_cuda | bool }}"
+      - "cudnn                    : {{ gpu_common_install_cudnn | bool }}"
+      - "nvidia container toolkit : {{ gpu_common_install_nvidia_container_toolkit | bool }}"
+
+- name: "공통 사전 준비"
+  ansible.builtin.include_tasks: prerequisites.yml
+
+- name: "GPU 사전 점검"
+  ansible.builtin.include_tasks: preflight.yml
+  when: gpu_preflight_enabled | bool
+
+- name: "NVIDIA Driver 설치"
+  ansible.builtin.include_tasks: nvidia_driver.yml
+  when: gpu_common_install_driver | bool
+
+- name: "CUDA Toolkit 설치"
+  ansible.builtin.include_tasks: cuda.yml
+  when: gpu_common_install_cuda | bool
+
+- name: "cuDNN 설치"
+  ansible.builtin.include_tasks: cudnn.yml
+  when: gpu_common_install_cudnn | bool
+
+- name: "NVIDIA Container Toolkit 설치"
+  ansible.builtin.include_tasks: nvidia_container_toolkit.yml
+  when: gpu_common_install_nvidia_container_toolkit | bool
+
+- name: "공통 GPU handler 실행"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Reboot 필요 여부 안내"
+  ansible.builtin.debug:
+    msg: >-
+      NVIDIA 커널 모듈 변경으로 reboot가 필요합니다.
+      gpu_allow_reboot=false이므로 자동 재부팅하지 않습니다.
+      운영 절차에 따라 재부팅한 뒤 Role을 다시 실행하세요.
+  when:
+    - gpu_reboot_required | default(false) | bool
+    - not (gpu_allow_reboot | bool)
+
+- name: "NVIDIA Driver 적용을 위한 Reboot"
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ gpu_reboot_timeout }}"
+    msg: "gpu_common role: NVIDIA driver 적용을 위한 재부팅"
+  when:
+    - gpu_reboot_required | default(false) | bool
+    - gpu_allow_reboot | bool
+
+- name: "자동 Reboot 완료 상태 반영"
+  ansible.builtin.set_fact:
+    gpu_reboot_required: false
+  when:
+    - gpu_reboot_required | default(false) | bool
+    - gpu_allow_reboot | bool
+
+- name: "공통 GPU 구성 검증"
+  ansible.builtin.include_tasks: verify.yml
+  when: gpu_verify_installation | bool

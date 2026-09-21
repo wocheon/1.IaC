@@ -1,0 +1,22 @@
+---
+- name: "Slurm 지원 환경 검증"
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version is version('22.04', '>=')
+      - slurm_common_node_role in ['controller', 'compute']
+      - groups[slurm_controller_group] | default([]) | length == 1
+      - groups[slurm_compute_group] | default([]) | length > 0
+    fail_msg: >-
+      Ubuntu 22.04 이상, controller 정확히 1대, compute 1대 이상이 필요합니다.
+      slurm_controller_group/slurm_compute_group과 Inventory를 확인하세요.
+    quiet: true
+
+- name: "Slurm 노드 이름 검증"
+  ansible.builtin.assert:
+    that:
+      - (hostvars[item].slurm_node_name | default(item)) is match('^[A-Za-z0-9._-]+$')
+    fail_msg: "Slurm NodeName에는 영문, 숫자, 점, 밑줄, 하이픈만 사용할 수 있습니다: {{ item }}"
+    quiet: true
+  loop: "{{ groups[slurm_compute_group] }}"
+

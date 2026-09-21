@@ -1,0 +1,48 @@
+---
+- name: "검증: containerd NVIDIA runtime 설정"
+  ansible.builtin.command:
+    cmd: "grep -q 'runtimes.nvidia' {{ kubernetes_containerd_config_path }}"
+  register: _gpu_kubernetes_v_containerd
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "검증: nvidia-container-cli info"
+  ansible.builtin.command:
+    cmd: nvidia-container-cli info
+  register: _gpu_kubernetes_v_nct
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: not (gpu_reboot_required | default(false) | bool)
+
+- name: "Kubernetes 검증 실패 항목 집계"
+  ansible.builtin.set_fact:
+    _gpu_kubernetes_verify_failures: >-
+      {{
+        ([] if (_gpu_kubernetes_v_containerd.rc | default(1)) == 0
+           else ['containerd 설정에 NVIDIA runtime이 없습니다: ' ~ kubernetes_containerd_config_path])
+        + ([] if (_gpu_kubernetes_v_nct.skipped | default(false)) or (_gpu_kubernetes_v_nct.rc | default(1)) == 0
+           else ['nvidia-container-cli info 실행 실패: ' ~
+                 (_gpu_kubernetes_v_nct.stderr | default('') | trim)])
+      }}
+
+- name: "Kubernetes 검증 결과"
+  ansible.builtin.debug:
+    msg:
+      - "containerd runtime : {{ _gpu_kubernetes_v_containerd.rc | default('failed') }}"
+      - "container toolkit  : {{ _gpu_kubernetes_v_nct.rc | default('skipped') }}"
+
+- name: "Kubernetes 검증 실패 경고"
+  ansible.builtin.debug:
+    msg: "[검증 경고] {{ _gpu_kubernetes_verify_failures }}"
+  when:
+    - _gpu_kubernetes_verify_failures | length > 0
+    - not (gpu_verify_fail_on_error | bool)
+
+- name: "Kubernetes 검증 실패 시 중단"
+  ansible.builtin.fail:
+    msg: "Kubernetes GPU 환경 검증 실패: {{ _gpu_kubernetes_verify_failures }}"
+  when:
+    - _gpu_kubernetes_verify_failures | length > 0
+    - gpu_verify_fail_on_error | bool

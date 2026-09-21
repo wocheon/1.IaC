@@ -1,0 +1,86 @@
+---
+- name: "검증: nvidia-smi"
+  ansible.builtin.command:
+    cmd: nvidia-smi
+  register: _gpu_common_v_smi
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when:
+    - gpu_common_verify_driver | bool
+    - not (gpu_reboot_required | default(false) | bool)
+
+- name: "검증: nvcc"
+  ansible.builtin.command:
+    cmd: "{{ cuda_install_path }}/bin/nvcc --version"
+  register: _gpu_common_v_nvcc
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: gpu_common_install_cuda | bool
+
+- name: "검증: cuDNN 패키지"
+  ansible.builtin.command:
+    argv:
+      - dpkg-query
+      - -W
+      - "-f=${Status}"
+      - "{{ cudnn_package }}"
+  register: _gpu_common_v_cudnn
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: gpu_common_install_cudnn | bool
+
+- name: "검증: NVIDIA Container Toolkit 실행 파일"
+  ansible.builtin.command:
+    cmd: nvidia-container-cli --version
+  register: _gpu_common_v_nct
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: gpu_common_install_nvidia_container_toolkit | bool
+
+- name: "공통 검증 실패 항목 집계"
+  ansible.builtin.set_fact:
+    _gpu_common_verify_failures: >-
+      {{
+        ([] if (_gpu_common_v_smi.skipped | default(false)) or (_gpu_common_v_smi.rc | default(1)) == 0
+           else ['nvidia-smi 실행 실패: ' ~ (_gpu_common_v_smi.stderr | default('') | trim)])
+        + ([] if (_gpu_common_v_nvcc.skipped | default(false)) or (_gpu_common_v_nvcc.rc | default(1)) == 0
+           else ['nvcc 실행 실패: ' ~ cuda_install_path ~ '/bin/nvcc'])
+        + ([] if (_gpu_common_v_cudnn.skipped | default(false)) or
+                 ((_gpu_common_v_cudnn.rc | default(1)) == 0 and
+                  'install ok installed' in (_gpu_common_v_cudnn.stdout | default('')))
+           else ['cuDNN 패키지 확인 실패: ' ~ cudnn_package])
+        + ([] if (_gpu_common_v_nct.skipped | default(false)) or (_gpu_common_v_nct.rc | default(1)) == 0
+           else ['nvidia-container-cli 실행 파일 확인 실패'])
+      }}
+
+- name: "공통 검증 결과"
+  ansible.builtin.debug:
+    msg:
+      - "nvidia-smi  : {{ _gpu_common_v_smi.rc | default('skipped') }}"
+      - "nvcc        : {{ _gpu_common_v_nvcc.rc | default('skipped') }}"
+      - "cuDNN       : {{ _gpu_common_v_cudnn.rc | default('skipped') }}"
+      - "toolkit     : {{ _gpu_common_v_nct.rc | default('skipped') }}"
+      - "reboot 필요 : {{ gpu_reboot_required | default(false) }}"
+
+- name: "Reboot 이후로 연기된 Driver 검증 안내"
+  ansible.builtin.debug:
+    msg: "재부팅 후 Role을 다시 실행하면 nvidia-smi 검증이 수행됩니다."
+  when: gpu_reboot_required | default(false) | bool
+
+- name: "공통 검증 실패 경고"
+  ansible.builtin.debug:
+    msg: "[검증 경고] {{ _gpu_common_verify_failures }}"
+  when:
+    - _gpu_common_verify_failures | length > 0
+    - not (gpu_verify_fail_on_error | bool)
+
+- name: "공통 검증 실패 시 중단"
+  ansible.builtin.fail:
+    msg: "GPU 공통 구성 검증 실패: {{ _gpu_common_verify_failures }}"
+  when:
+    - _gpu_common_verify_failures | length > 0
+    - gpu_verify_fail_on_error | bool

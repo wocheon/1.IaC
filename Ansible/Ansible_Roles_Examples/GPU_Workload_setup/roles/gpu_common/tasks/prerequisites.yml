@@ -1,0 +1,68 @@
+---
+# ==========================================================================
+# 공통 사전 준비
+#  - apt 기본 패키지
+#  - apt keyring 디렉토리
+#  - 아키텍처 판별 (apt / NVIDIA repo 경로용)
+#  - NVIDIA PCI 디바이스 존재 확인
+# ==========================================================================
+
+- name: "apt 아키텍처 / NVIDIA repo 경로 판별"
+  ansible.builtin.set_fact:
+    _gpu_apt_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'amd64' }}"
+    _gpu_nvidia_repo_arch: "{{ 'sbsa' if ansible_facts['architecture'] == 'aarch64' else 'x86_64' }}"
+    _gpu_nvidia_repo_distro: "ubuntu{{ ansible_facts['distribution_version'] | replace('.', '') }}"
+    gpu_reboot_required: "{{ gpu_reboot_required | default(false) }}"
+
+- name: "apt 캐시 갱신"
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ gpu_apt_cache_valid_time }}"
+
+- name: "공통 패키지 설치"
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - apt-transport-https
+      - pciutils
+      - mokutil
+    state: present
+
+- name: "apt keyring 디렉토리 생성"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "NVIDIA PCI 디바이스 확인"
+  ansible.builtin.command:
+    cmd: lspci -nn
+  register: _gpu_lspci
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "NVIDIA GPU 감지 결과 저장"
+  ansible.builtin.set_fact:
+    gpu_nvidia_device_present: >-
+      {{ 'nvidia' in (_gpu_lspci.stdout | default('') | lower) }}
+
+- name: "NVIDIA GPU 미감지 경고"
+  ansible.builtin.debug:
+    msg: >-
+      [경고] 이 호스트에서 NVIDIA PCI 디바이스를 찾지 못했습니다.
+      GPU 패스스루가 설정되지 않은 VM 이거나 이미지 빌드 단계일 수 있습니다.
+      드라이버 설치는 진행되지만 nvidia-smi 검증은 실패할 수 있습니다.
+  when: not (gpu_nvidia_device_present | bool)
+
+- name: "NVIDIA GPU 필수 검증"
+  ansible.builtin.assert:
+    that:
+      - gpu_nvidia_device_present | bool
+    fail_msg: "gpu_require_nvidia_device=true 이지만 NVIDIA PCI 디바이스를 찾을 수 없습니다."
+    quiet: true
+  when: gpu_require_nvidia_device | bool

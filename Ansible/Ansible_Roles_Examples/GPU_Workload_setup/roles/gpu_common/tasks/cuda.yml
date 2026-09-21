@@ -1,0 +1,39 @@
+---
+# ==========================================================================
+# CUDA Toolkit 설치
+#
+# Driver 와 CUDA Toolkit 은 별도 컴포넌트로 취급한다.
+# 호환성 매트릭스는 Role 내부에서 구현하지 않으며 README 를 참고한다.
+# 여기서는 nvidia-driver 를 다시 끌어오지 않도록 cuda-toolkit-<ver> 메타패키지만
+# 설치한다. (cuda / cuda-<ver> 메타패키지는 드라이버까지 포함한다)
+# ==========================================================================
+
+- name: "NVIDIA apt repository 등록"
+  ansible.builtin.include_tasks: nvidia_repo.yml
+  when: not (_gpu_nvidia_repo_configured | default(false) | bool)
+
+- name: "CUDA Toolkit 설치 ({{ cuda_package }})"
+  ansible.builtin.apt:
+    name: "{{ cuda_package }}"
+    state: present
+
+- name: "CUDA 환경변수 설정 (/etc/profile.d/cuda.sh)"
+  ansible.builtin.template:
+    src: cuda.sh.j2
+    dest: /etc/profile.d/cuda.sh
+    owner: root
+    group: root
+    mode: "0644"
+  when: cuda_manage_profile_d | bool
+
+- name: "CUDA 라이브러리 경로 등록 (/etc/ld.so.conf.d)"
+  ansible.builtin.copy:
+    content: |
+      # Ansible managed - gpu_common role
+      {{ cuda_install_path }}/lib64
+    dest: /etc/ld.so.conf.d/cuda-gpu-setup.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: cuda_manage_profile_d | bool
+  notify: run ldconfig

@@ -1,0 +1,46 @@
+---
+- name: "DCGM용 NVIDIA repository 등록"
+  ansible.builtin.include_role:
+    name: gpu_common
+    tasks_from: nvidia_repo.yml
+  when: not (_gpu_nvidia_repo_configured | default(false) | bool)
+
+- name: "DCGM 패키지 설치"
+  ansible.builtin.apt:
+    name: "{{ dcgm_package }}"
+    state: present
+    install_recommends: true
+
+- name: "DCGM 서비스 활성화"
+  ansible.builtin.systemd:
+    name: "{{ dcgm_service_name }}"
+    enabled: true
+
+- name: "DCGM 서비스 시작"
+  ansible.builtin.systemd:
+    name: "{{ dcgm_service_name }}"
+    state: started
+  when: not (gpu_reboot_required | default(false) | bool)
+
+- name: "DCGM 시작 연기 안내"
+  ansible.builtin.debug:
+    msg: "Driver 적용을 위한 reboot 이후 활성화된 DCGM 서비스가 시작됩니다."
+  when: gpu_reboot_required | default(false) | bool
+
+- name: "DCGM GPU discovery 검증"
+  ansible.builtin.command:
+    cmd: dcgmi discovery -l
+  changed_when: false
+  check_mode: false
+  when:
+    - gpu_verify_installation | bool
+    - not (gpu_reboot_required | default(false) | bool)
+
+- name: "DCGM 진단 실행 (명시적으로 활성화한 경우만)"
+  ansible.builtin.command:
+    cmd: "dcgmi diag -r {{ dcgm_diagnostic_level }}"
+  changed_when: false
+  check_mode: false
+  when:
+    - dcgm_run_diagnostics | bool
+    - not (gpu_reboot_required | default(false) | bool)

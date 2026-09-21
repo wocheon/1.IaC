@@ -1,0 +1,46 @@
+---
+- name: "Kubernetes control-plane 구성"
+  hosts: kubernetes_control_plane
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [kubernetes]
+  roles:
+    - role: kubernetes_control_plane
+      tags: [kubernetes, kubernetes-control-plane]
+
+- name: "Kubernetes worker 구성"
+  hosts: kubernetes_workers
+  become: true
+  gather_facts: true
+  serial: "{{ kubernetes_worker_serial | default('100%') }}"
+  tags: [kubernetes]
+  roles:
+    - role: kubernetes_worker
+      tags: [kubernetes, kubernetes-worker]
+
+- name: "Slurm 노드 facts 수집"
+  hosts: slurm_cluster
+  become: true
+  gather_facts: true
+  tasks: []
+  tags: [slurm]
+
+- name: "Slurm controller 구성"
+  hosts: slurm_controllers
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [slurm]
+  roles:
+    - role: slurm_controller
+      tags: [slurm, slurm-controller]
+
+- name: "Slurm compute node 구성"
+  hosts: slurm_compute
+  become: true
+  gather_facts: true
+  tags: [slurm]
+  roles:
+    - role: slurm_compute
+      tags: [slurm, slurm-compute]

@@ -1,0 +1,22 @@
+---
+- name: "Slurm controller 공통 구성"
+  ansible.builtin.include_role:
+    name: slurm_common
+    public: true
+  vars:
+    slurm_common_node_role: controller
+
+- name: "slurmctld 서비스 활성화"
+  ansible.builtin.systemd:
+    name: slurmctld
+    enabled: true
+    state: started
+
+- name: "Slurm controller 응답 검증"
+  ansible.builtin.command: scontrol ping
+  register: _slurm_controller_ping
+  changed_when: false
+  retries: 10
+  delay: 3
+  until: "'UP' in _slurm_controller_ping.stdout"
+

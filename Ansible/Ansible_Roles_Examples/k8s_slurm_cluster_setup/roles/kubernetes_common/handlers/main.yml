@@ -1,0 +1,17 @@
+---
+- name: restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+    daemon_reload: true
+
+- name: restart kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+
+- name: reload kubernetes sysctl
+  ansible.builtin.command: sysctl --system
+  changed_when: true
+

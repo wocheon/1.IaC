@@ -1,0 +1,27 @@
+---
+- name: "Docker GPU 공통 기반 구성"
+  ansible.builtin.include_role:
+    name: gpu_common
+    public: true
+  vars:
+    gpu_common_install_driver: "{{ gpu_install_driver | bool }}"
+    gpu_common_install_cuda: false
+    gpu_common_install_cudnn: false
+    gpu_common_install_nvidia_container_toolkit: "{{ gpu_install_nvidia_container_toolkit | bool }}"
+
+- name: "Docker Engine과 NVIDIA runtime 구성"
+  ansible.builtin.include_tasks: docker.yml
+
+- name: "Docker handler 실행"
+  ansible.builtin.meta: flush_handlers
+
+- name: "DCGM Exporter 컨테이너 구성 (선택)"
+  ansible.builtin.include_tasks: dcgm_exporter.yml
+  when: gpu_install_dcgm_exporter | bool
+
+- name: "DCGM Exporter handler 실행"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Docker GPU 환경 검증"
+  ansible.builtin.include_tasks: verify.yml
+  when: gpu_verify_installation | bool

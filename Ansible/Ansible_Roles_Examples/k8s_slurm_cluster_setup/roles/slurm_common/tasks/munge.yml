@@ -1,0 +1,101 @@
+---
+- name: "MUNGE 키 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_munge_key_path | dirname }}"
+    state: directory
+    owner: munge
+    group: munge
+    mode: "0700"
+
+- name: "controller MUNGE 키 생성"
+  ansible.builtin.command:
+    cmd: "dd if=/dev/urandom of={{ slurm_munge_key_path }} bs=1 count=1024"
+    creates: "{{ slurm_munge_key_path }}"
+  no_log: true
+  when: slurm_common_node_role == 'controller'
+  notify: restart munge
+
+- name: "controller MUNGE 키 checksum 조회"
+  ansible.builtin.stat:
+    path: "{{ slurm_munge_key_path }}"
+    checksum_algorithm: sha256
+  delegate_to: "{{ groups[slurm_controller_group] | first }}"
+  register: _slurm_controller_munge_key_stat
+  when: slurm_common_node_role == 'compute'
+
+- name: "compute node MUNGE 키 checksum 조회"
+  ansible.builtin.stat:
+    path: "{{ slurm_munge_key_path }}"
+    checksum_algorithm: sha256
+  register: _slurm_compute_munge_key_stat
+  when: slurm_common_node_role == 'compute'
+
+- name: "MUNGE 키 동기화 필요 여부 판정"
+  ansible.builtin.set_fact:
+    _slurm_munge_key_sync_required: >-
+      {{ not (_slurm_compute_munge_key_stat.stat.exists | default(false)) or
+         (_slurm_compute_munge_key_stat.stat.checksum | default('') !=
+          _slurm_controller_munge_key_stat.stat.checksum | default('')) }}
+  when: slurm_common_node_role == 'compute'
+
+- name: "controller에서 MUNGE 키 읽기"
+  ansible.builtin.slurp:
+    src: "{{ slurm_munge_key_path }}"
+  delegate_to: "{{ groups[slurm_controller_group] | first }}"
+  register: _slurm_controller_munge_key
+  no_log: true
+  when:
+    - slurm_common_node_role == 'compute'
+    - _slurm_munge_key_sync_required | bool
+
+- name: "compute node에 base64 MUNGE 키 임시 저장"
+  ansible.builtin.copy:
+    content: "{{ _slurm_controller_munge_key.content }}"
+    dest: "{{ slurm_munge_key_path }}.b64"
+    owner: root
+    group: root
+    mode: "0400"
+  no_log: true
+  when:
+    - slurm_common_node_role == 'compute'
+    - _slurm_munge_key_sync_required | bool
+
+- name: "compute node MUNGE 키 binary 복원"
+  ansible.builtin.shell:
+    cmd: >-
+      base64 --decode {{ slurm_munge_key_path }}.b64 > {{ slurm_munge_key_path }}
+  no_log: true
+  when:
+    - slurm_common_node_role == 'compute'
+    - _slurm_munge_key_sync_required | bool
+  notify: restart munge
+
+- name: "base64 MUNGE 임시 파일 제거"
+  ansible.builtin.file:
+    path: "{{ slurm_munge_key_path }}.b64"
+    state: absent
+  when: slurm_common_node_role == 'compute'
+
+- name: "controller MUNGE 키 권한 설정"
+  ansible.builtin.file:
+    path: "{{ slurm_munge_key_path }}"
+    owner: munge
+    group: munge
+    mode: "0400"
+  when: slurm_common_node_role == 'controller'
+  notify: restart munge
+
+- name: "compute node MUNGE 키 권한 설정"
+  ansible.builtin.file:
+    path: "{{ slurm_munge_key_path }}"
+    owner: munge
+    group: munge
+    mode: "0400"
+  when: slurm_common_node_role == 'compute'
+  notify: restart munge
+
+- name: "MUNGE 서비스 활성화"
+  ansible.builtin.systemd:
+    name: munge
+    enabled: true
+    state: started

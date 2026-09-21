@@ -1,0 +1,46 @@
+---
+# ==========================================================================
+# [공통 / 재사용] Python virtualenv
+# System Python 을 오염시키지 않기 위해 프레임워크는 venv 에만 설치한다.
+# pytorch.yml / tensorflow.yml 이 공유한다.
+# ==========================================================================
+
+- name: "Python 패키지 설치"
+  ansible.builtin.apt:
+    name:
+      - "python{{ gpu_python_version }}"
+      - "python{{ gpu_python_version }}-venv"
+      - "python{{ gpu_python_version }}-dev"
+      - "python{{ gpu_python_version }}-pip"
+    state: present
+
+- name: "virtualenv 상위 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ gpu_python_venv_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "virtualenv 생성 ({{ gpu_python_venv_path }})"
+  ansible.builtin.command:
+    cmd: "python{{ gpu_python_version }} -m venv {{ gpu_python_venv_path }}"
+    creates: "{{ gpu_python_venv_path }}/bin/activate"
+
+- name: "virtualenv 소유자 설정 (root 이외의 소유자를 지정한 경우에만)"
+  ansible.builtin.file:
+    path: "{{ gpu_python_venv_path }}"
+    state: directory
+    owner: "{{ gpu_python_venv_owner }}"
+    group: "{{ gpu_python_venv_group }}"
+    recurse: true
+  when: (gpu_python_venv_owner != 'root') or (gpu_python_venv_group != 'root')
+
+- name: "pip / setuptools / wheel 준비"
+  ansible.builtin.pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+    state: present
+    virtualenv: "{{ gpu_python_venv_path }}"

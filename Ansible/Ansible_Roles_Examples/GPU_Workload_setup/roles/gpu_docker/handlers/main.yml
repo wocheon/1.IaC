@@ -1,0 +1,12 @@
+---
+- name: restart docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+
+- name: restart dcgm exporter
+  ansible.builtin.systemd:
+    name: "{{ dcgm_exporter_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when: not (gpu_reboot_required | default(false) | bool)

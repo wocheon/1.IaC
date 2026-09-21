@@ -1,0 +1,16 @@
+---
+- name: "설치된 Kubernetes 도구 버전 확인"
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - kubeadm version -o short
+    - kubectl version --client=true
+    - containerd --version
+  register: _kubernetes_common_versions
+  changed_when: false
+
+- name: "containerd 활성 상태 확인"
+  ansible.builtin.command: systemctl is-active containerd
+  register: _kubernetes_containerd_active
+  changed_when: false
+  failed_when: _kubernetes_containerd_active.stdout != 'active'
+

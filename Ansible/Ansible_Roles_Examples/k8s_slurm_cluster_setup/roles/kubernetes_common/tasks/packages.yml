@@ -1,0 +1,59 @@
+---
+- name: "Kubernetes 저장소 필수 패키지 설치"
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "APT keyring 디렉토리 생성"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Kubernetes 저장소 서명 키 설치"
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_repository_minor }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "Kubernetes APT 저장소 설정"
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc]
+      https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_repository_minor }}/deb/ /
+    filename: kubernetes
+    state: present
+    update_cache: true
+
+- name: "Kubernetes 패키지 설치"
+  ansible.builtin.apt:
+    name: "{{ ['kubelet', 'kubeadm', 'kubectl'] if kubernetes_package_version | length == 0 else ['kubelet=' ~ kubernetes_package_version, 'kubeadm=' ~ kubernetes_package_version, 'kubectl=' ~ kubernetes_package_version] }}"
+    state: present
+    allow_downgrade: false
+
+- name: "Kubernetes 패키지 hold"
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  when: kubernetes_hold_packages | bool
+
+- name: "kubelet 서비스 활성화"
+  ansible.builtin.systemd:
+    name: kubelet
+    enabled: true
+    state: started
+

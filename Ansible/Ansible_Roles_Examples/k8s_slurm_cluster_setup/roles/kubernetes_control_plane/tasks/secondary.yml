@@ -1,0 +1,26 @@
+---
+- name: "worker/control-plane join 명령 생성"
+  ansible.builtin.command: kubeadm token create --print-join-command
+  delegate_to: "{{ _kubernetes_primary_control_plane }}"
+  register: _kubernetes_control_plane_join_command
+  changed_when: false
+  no_log: true
+
+- name: "control-plane 인증서 키 생성"
+  ansible.builtin.command: kubeadm init phase upload-certs --upload-certs
+  delegate_to: "{{ _kubernetes_primary_control_plane }}"
+  register: _kubernetes_certificate_key_output
+  changed_when: false
+  no_log: true
+
+- name: "추가 control-plane 가입 실행"
+  ansible.builtin.command: >-
+    {{ _kubernetes_control_plane_join_command.stdout }}
+    --control-plane
+    --certificate-key {{ _kubernetes_certificate_key_output.stdout_lines | last }}
+    --cri-socket {{ kubernetes_cri_socket }}
+    --apiserver-advertise-address {{ kubernetes_node_ip | default(ansible_default_ipv4.address) }}
+  register: _kubernetes_control_plane_join
+  changed_when: _kubernetes_control_plane_join.rc == 0
+  no_log: true
+

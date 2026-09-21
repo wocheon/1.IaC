@@ -1,0 +1,50 @@
+---
+- name: "Kubernetes control-plane 공통 기반 구성"
+  ansible.builtin.include_role:
+    name: kubernetes_common
+    public: true
+
+- name: "control-plane 역할 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname in groups['kubernetes_control_plane']
+      - kubernetes_cni_manifest_url | length > 0 or not (kubernetes_install_cni | bool)
+    fail_msg: "control-plane Inventory 그룹과 CNI 설정을 확인하세요."
+    quiet: true
+
+- name: "최초 control-plane 판정"
+  ansible.builtin.set_fact:
+    _kubernetes_primary_control_plane: "{{ groups['kubernetes_control_plane'] | first }}"
+    _kubernetes_is_primary_control_plane: >-
+      {{ inventory_hostname == (groups['kubernetes_control_plane'] | first) }}
+
+- name: "현재 kubeadm 버전 조회"
+  ansible.builtin.command: kubeadm version -o short
+  register: _kubernetes_kubeadm_version
+  changed_when: false
+
+- name: "control-plane 가입 상태 확인"
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: _kubernetes_admin_conf
+
+- name: "최초 control-plane 초기화"
+  ansible.builtin.include_tasks: primary.yml
+  when: _kubernetes_is_primary_control_plane | bool
+
+- name: "추가 control-plane 가입"
+  ansible.builtin.include_tasks: secondary.yml
+  when:
+    - not (_kubernetes_is_primary_control_plane | bool)
+    - not (_kubernetes_admin_conf.stat.exists | bool)
+
+- name: "관리자 kubeconfig 구성"
+  ansible.builtin.include_tasks: kubeconfig.yml
+
+- name: "control-plane API 상태 확인"
+  ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get --raw=/readyz
+  register: _kubernetes_api_ready
+  changed_when: false
+  retries: 20
+  delay: 5
+  until: _kubernetes_api_ready.rc == 0

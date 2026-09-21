@@ -1,0 +1,48 @@
+---
+- name: "Slurm 및 MUNGE 패키지 설치"
+  ansible.builtin.apt:
+    name: "{{ slurm_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "시간 동기화 서비스 활성화"
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+
+- name: "Slurm 설정 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Slurm 로그 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_log_dir }}"
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0755"
+
+- name: "slurmd spool 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_slurmd_spool_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: slurm_common_node_role == 'compute'
+
+- name: "slurmctld state 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_state_save_location }}"
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0755"
+  when: slurm_common_node_role == 'controller'
+

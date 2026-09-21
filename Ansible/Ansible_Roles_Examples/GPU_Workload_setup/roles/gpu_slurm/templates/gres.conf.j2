@@ -1,0 +1,7 @@
+# Ansible managed - gpu_slurm role
+{% if slurm_gres_autodetect != 'off' %}
+AutoDetect={{ slurm_gres_autodetect }}
+{% endif %}
+{% if (_gpu_slurm_count | int) > 0 %}
+Name=gpu{% if _gpu_slurm_type | length > 0 %} Type={{ _gpu_slurm_type }}{% endif %} File={% if (_gpu_slurm_count | int) == 1 %}/dev/nvidia0{% else %}/dev/nvidia[0-{{ (_gpu_slurm_count | int) - 1 }}]{% endif %}
+{% endif %}

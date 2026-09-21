@@ -1,0 +1,4 @@
+# Ansible managed - gpu_slurm role
+ConstrainDevices={{ slurm_cgroup_constrain_devices | bool | ternary('yes', 'no') }}
+ConstrainCores={{ slurm_cgroup_constrain_cores | bool | ternary('yes', 'no') }}
+ConstrainRAMSpace={{ slurm_cgroup_constrain_ram_space | bool | ternary('yes', 'no') }}

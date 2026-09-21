@@ -1,0 +1,35 @@
+---
+# ==========================================================================
+# [공통 / 재사용] NVIDIA Container Toolkit 패키지 설치
+# Docker/containerd 런타임 설정은 각 환경 Role이 담당한다.
+# ==========================================================================
+
+- name: "NVIDIA Container Toolkit GPG 키 설치"
+  ansible.builtin.get_url:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+    dest: /etc/apt/keyrings/nvidia-container-toolkit.asc
+    owner: root
+    group: root
+    mode: "0644"
+  register: _gpu_nct_key
+
+- name: "NVIDIA Container Toolkit apt repository 등록"
+  ansible.builtin.template:
+    src: nvidia-container-toolkit.list.j2
+    dest: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    owner: root
+    group: root
+    mode: "0644"
+  register: _gpu_nct_repo
+
+- name: "Container Toolkit repository 추가 후 apt 캐시 갱신"
+  ansible.builtin.apt:
+    update_cache: true
+  when: (_gpu_nct_key is changed) or (_gpu_nct_repo is changed)
+
+- name: "NVIDIA Container Toolkit 설치"
+  ansible.builtin.apt:
+    name: >-
+      nvidia-container-toolkit{{ '=' ~ nvidia_container_toolkit_version
+      if nvidia_container_toolkit_version | length > 0 else '' }}
+    state: present

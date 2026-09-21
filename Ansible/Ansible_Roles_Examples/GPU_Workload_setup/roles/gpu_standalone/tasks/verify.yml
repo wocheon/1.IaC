@@ -1,0 +1,64 @@
+---
+- name: "검증: PyTorch GPU 인식"
+  ansible.builtin.command:
+    cmd: >-
+      {{ gpu_python_venv_path }}/bin/python -c
+      "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.device_count())"
+  register: _gpu_standalone_v_torch
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when:
+    - gpu_install_pytorch | bool
+    - not (gpu_reboot_required | default(false) | bool)
+
+- name: "검증: TensorFlow GPU 인식"
+  ansible.builtin.command:
+    cmd: >-
+      {{ gpu_python_venv_path }}/bin/python -c
+      "import tensorflow as tf; print(tf.__version__, tf.config.list_physical_devices('GPU'))"
+  register: _gpu_standalone_v_tf
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  environment:
+    TF_CPP_MIN_LOG_LEVEL: "3"
+  when:
+    - gpu_install_tensorflow | bool
+    - not (gpu_reboot_required | default(false) | bool)
+
+- name: "Standalone 검증 실패 항목 집계"
+  ansible.builtin.set_fact:
+    _gpu_standalone_verify_failures: >-
+      {{
+        ([] if (_gpu_standalone_v_torch.skipped | default(false)) or
+                 ((_gpu_standalone_v_torch.rc | default(1)) == 0 and
+                  'True' in (_gpu_standalone_v_torch.stdout | default('')))
+           else ['PyTorch에서 GPU를 인식하지 못했습니다: ' ~
+                 (_gpu_standalone_v_torch.stdout | default('') | trim)])
+        + ([] if (_gpu_standalone_v_tf.skipped | default(false)) or
+                 ((_gpu_standalone_v_tf.rc | default(1)) == 0 and
+                  'PhysicalDevice' in (_gpu_standalone_v_tf.stdout | default('')))
+           else ['TensorFlow에서 GPU를 인식하지 못했습니다: ' ~
+                 (_gpu_standalone_v_tf.stdout | default('') | trim)])
+      }}
+
+- name: "Standalone 검증 결과"
+  ansible.builtin.debug:
+    msg:
+      - "pytorch    : {{ _gpu_standalone_v_torch.stdout | default('skipped', true) | trim }}"
+      - "tensorflow : {{ _gpu_standalone_v_tf.stdout | default('skipped', true) | trim }}"
+
+- name: "Standalone 검증 실패 경고"
+  ansible.builtin.debug:
+    msg: "[검증 경고] {{ _gpu_standalone_verify_failures }}"
+  when:
+    - _gpu_standalone_verify_failures | length > 0
+    - not (gpu_verify_fail_on_error | bool)
+
+- name: "Standalone 검증 실패 시 중단"
+  ansible.builtin.fail:
+    msg: "Standalone GPU 환경 검증 실패: {{ _gpu_standalone_verify_failures }}"
+  when:
+    - _gpu_standalone_verify_failures | length > 0
+    - gpu_verify_fail_on_error | bool

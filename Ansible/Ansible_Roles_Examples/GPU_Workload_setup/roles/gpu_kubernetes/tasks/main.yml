@@ -1,0 +1,32 @@
+---
+- name: "Kubernetes GPU Role 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - kubernetes_container_runtime == 'containerd'
+      - gpu_install_nvidia_container_toolkit | bool
+    fail_msg: >-
+      gpu_kubernetes는 현재 containerd와 NVIDIA Container Toolkit 구성을 지원합니다.
+      GPU Operator가 Toolkit까지 관리한다면 이 Role을 함께 사용하지 마세요.
+    quiet: true
+
+- name: "Kubernetes GPU 공통 기반 구성"
+  ansible.builtin.include_role:
+    name: gpu_common
+    public: true
+  vars:
+    gpu_common_install_driver: >-
+      {{ (gpu_install_driver | bool) and not (kubernetes_gpu_driver_managed | bool) }}
+    gpu_common_install_cuda: false
+    gpu_common_install_cudnn: false
+    gpu_common_install_nvidia_container_toolkit: "{{ gpu_install_nvidia_container_toolkit | bool }}"
+    gpu_common_verify_driver: true
+
+- name: "Kubernetes containerd GPU runtime 구성"
+  ansible.builtin.include_tasks: kubernetes.yml
+
+- name: "containerd handler 실행"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Kubernetes GPU 환경 검증"
+  ansible.builtin.include_tasks: verify.yml
+  when: gpu_verify_installation | bool

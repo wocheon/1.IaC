@@ -1,0 +1,17 @@
+---
+# ==========================================================================
+# cuDNN 설치 (optional)
+#
+# PyTorch / TensorFlow 를 pip wheel 로 설치하면 cuDNN 이 wheel 에 포함되므로
+# 호스트 cuDNN 설치는 기본적으로 비활성화되어 있다. (gpu_install_cudnn: false)
+# C/C++ 레벨 개발이나 소스 빌드가 필요한 경우에만 활성화한다.
+# ==========================================================================
+
+- name: "NVIDIA apt repository 등록"
+  ansible.builtin.include_tasks: nvidia_repo.yml
+  when: not (_gpu_nvidia_repo_configured | default(false) | bool)
+
+- name: "cuDNN 설치 ({{ cudnn_package }}{{ '=' ~ cudnn_version if cudnn_version | length > 0 else '' }})"
+  ansible.builtin.apt:
+    name: "{{ cudnn_package }}{{ '=' ~ cudnn_version if cudnn_version | length > 0 else '' }}"
+    state: present

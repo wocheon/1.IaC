@@ -1,0 +1,6 @@
+---
+- name: restart slurmd
+  ansible.builtin.systemd:
+    name: "{{ slurm_daemon_service }}"
+    state: restarted
+  when: slurm_restart_daemon | bool

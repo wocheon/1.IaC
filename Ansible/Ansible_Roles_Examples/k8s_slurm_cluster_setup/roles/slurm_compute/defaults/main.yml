@@ -1,0 +1,3 @@
+---
+slurm_restart_services: true
+

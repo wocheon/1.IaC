@@ -1,0 +1,30 @@
+---
+- name: "Standalone GPU 공통 기반 구성"
+  ansible.builtin.include_role:
+    name: gpu_common
+    public: true
+  vars:
+    gpu_common_install_driver: "{{ gpu_install_driver | bool }}"
+    gpu_common_install_cuda: "{{ gpu_install_cuda | bool }}"
+    gpu_common_install_cudnn: "{{ gpu_install_cudnn | bool }}"
+    gpu_common_install_nvidia_container_toolkit: false
+
+- name: "Python virtualenv 준비"
+  ansible.builtin.include_tasks: python_venv.yml
+  when: (gpu_install_pytorch | bool) or (gpu_install_tensorflow | bool)
+
+- name: "PyTorch 설치"
+  ansible.builtin.include_tasks: pytorch.yml
+  when: gpu_install_pytorch | bool
+
+- name: "TensorFlow 설치"
+  ansible.builtin.include_tasks: tensorflow.yml
+  when: gpu_install_tensorflow | bool
+
+- name: "Standalone Host DCGM 구성 (선택)"
+  ansible.builtin.include_tasks: dcgm.yml
+  when: gpu_install_dcgm | bool
+
+- name: "Standalone GPU 환경 검증"
+  ansible.builtin.include_tasks: verify.yml
+  when: gpu_verify_installation | bool

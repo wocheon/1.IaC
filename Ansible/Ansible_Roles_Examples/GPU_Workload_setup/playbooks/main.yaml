@@ -1,0 +1,42 @@
+---
+- name: "Standalone GPU 서버 구성"
+  hosts: gpu_standalone_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: gpu_standalone
+      tags:
+        - gpu
+        - standalone
+
+- name: "Docker GPU 서버 구성"
+  hosts: gpu_docker_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: gpu_docker
+      tags:
+        - gpu
+        - docker
+
+- name: "Kubernetes GPU Worker 구성"
+  hosts: gpu_kubernetes_nodes
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: gpu_kubernetes
+      tags:
+        - gpu
+        - kubernetes
+
+- name: "Slurm GPU Compute Node 구성"
+  hosts: gpu_slurm_nodes
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: gpu_slurm
+      tags:
+        - gpu
+        - slurm

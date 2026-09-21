@@ -1,0 +1,34 @@
+---
+gpu_install_driver: true
+gpu_install_cuda: true
+gpu_install_cudnn: false
+
+slurm_gres_config_path: /etc/slurm/gres.conf
+slurm_cgroup_config_path: /etc/slurm/cgroup.conf
+slurm_config_owner: root
+slurm_config_group: root
+slurm_config_mode: "0644"
+
+slurm_manage_gres_conf: true
+slurm_gres_autodetect: nvml
+slurm_gpu_type: ""
+slurm_gpu_count: 0
+
+slurm_manage_cgroup_conf: false
+slurm_cgroup_constrain_devices: true
+slurm_cgroup_constrain_cores: true
+slurm_cgroup_constrain_ram_space: true
+
+slurm_restart_daemon: false
+slurm_daemon_service: slurmd
+
+# 선택적 Host DCGM. Slurm Job이 없는 drain 상태에서 진단을 수행한다.
+gpu_install_dcgm: false
+dcgm_cuda_major: "{{ cuda_version.split('.')[0] }}"
+dcgm_package: "datacenter-gpu-manager-4-cuda{{ dcgm_cuda_major }}"
+dcgm_service_name: nvidia-dcgm
+dcgm_run_diagnostics: false
+dcgm_diagnostic_level: "1"
+
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true

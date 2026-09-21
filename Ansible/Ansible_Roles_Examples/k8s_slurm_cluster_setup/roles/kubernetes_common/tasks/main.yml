@@ -1,0 +1,20 @@
+---
+- name: "Kubernetes 사전 점검"
+  ansible.builtin.include_tasks: preflight.yml
+
+- name: "Kubernetes 커널 및 OS 설정"
+  ansible.builtin.include_tasks: system.yml
+
+- name: "containerd 구성"
+  ansible.builtin.include_tasks: containerd.yml
+
+- name: "Kubernetes 패키지 구성"
+  ansible.builtin.include_tasks: packages.yml
+
+- name: "Kubernetes 공통 handler 실행"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Kubernetes 공통 구성 검증"
+  ansible.builtin.include_tasks: verify.yml
+  when: kubernetes_verify_installation | bool
+

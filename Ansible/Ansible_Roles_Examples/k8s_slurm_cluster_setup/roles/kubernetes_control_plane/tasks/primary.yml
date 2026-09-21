@@ -1,0 +1,40 @@
+---
+- name: "kubeadm 설정 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ kubernetes_kubeadm_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "kubeadm init 설정 생성"
+  ansible.builtin.template:
+    src: kubeadm-init.yaml.j2
+    dest: "{{ kubernetes_kubeadm_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: "최초 control-plane에서 kubeadm init 실행"
+  ansible.builtin.command:
+    cmd: "kubeadm init --config {{ kubernetes_kubeadm_config_path }} --upload-certs"
+    creates: /etc/kubernetes/admin.conf
+  register: _kubernetes_kubeadm_init
+  no_log: true
+
+- name: "API server 포트 대기"
+  ansible.builtin.wait_for:
+    host: "{{ kubernetes_node_ip | default(ansible_default_ipv4.address) }}"
+    port: "{{ kubernetes_apiserver_port }}"
+    timeout: "{{ kubernetes_wait_for_control_plane_timeout }}"
+
+- name: "CNI manifest 적용"
+  ansible.builtin.command: >-
+    kubectl --kubeconfig=/etc/kubernetes/admin.conf apply
+    --server-side --force-conflicts -f {{ kubernetes_cni_manifest_url }}
+  register: _kubernetes_cni_apply
+  changed_when: >-
+    'created' in _kubernetes_cni_apply.stdout or
+    'configured' in _kubernetes_cni_apply.stdout
+  when: kubernetes_install_cni | bool
+

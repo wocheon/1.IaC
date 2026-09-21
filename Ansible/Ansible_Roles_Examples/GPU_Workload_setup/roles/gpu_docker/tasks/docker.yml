@@ -1,0 +1,114 @@
+---
+# ==========================================================================
+# Docker Engine 설치 + GPU 런타임 설정
+#
+# [DISRUPTIVE] daemon.json 변경 시 handler 로 docker 를 restart 한다.
+#              실행 중인 컨테이너가 중단될 수 있다.
+#
+# docker_manage_daemon_json=true 이면 이 Role 의 daemon.json 템플릿이
+# GPU 런타임 설정의 "단일 소스" 가 된다.
+# false이면 기존 파일을 보존하고 nvidia-ctk로 필요한 항목만 추가한다.
+# ==========================================================================
+
+- name: "Docker GPG 키 설치"
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: "0644"
+  register: _gpu_docker_key
+
+- name: "Docker apt repository 등록"
+  ansible.builtin.template:
+    src: docker.list.j2
+    dest: /etc/apt/sources.list.d/docker.list
+    owner: root
+    group: root
+    mode: "0644"
+  register: _gpu_docker_repo
+
+- name: "Docker repository 추가 후 apt 캐시 갱신"
+  ansible.builtin.apt:
+    update_cache: true
+  when: (_gpu_docker_key is changed) or (_gpu_docker_repo is changed)
+
+- name: "Docker Engine 설치"
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+
+- name: "Docker 서비스 활성화"
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: "docker 그룹에 사용자 추가"
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+
+- name: "daemon.json 구성 값 생성"
+  ansible.builtin.set_fact:
+    _gpu_docker_daemon_config: >-
+      {{ docker_daemon_options
+         | combine(_gpu_docker_runtime_config, recursive=True) }}
+  vars:
+    _gpu_docker_runtime_config: >-
+      {{
+        {
+          'runtimes': {
+            'nvidia': {
+              'path': '/usr/bin/nvidia-container-runtime',
+              'runtimeArgs': []
+            }
+          }
+        }
+        | combine(
+            {'default-runtime': 'nvidia'} if docker_default_runtime_nvidia | bool else {}
+          )
+        if gpu_install_nvidia_container_toolkit | bool else {}
+      }}
+  when: docker_manage_daemon_json | bool
+
+- name: "/etc/docker/daemon.json 작성"
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+    validate: "python3 -c \"import json,sys; json.load(open('%s'))\""
+  when: docker_manage_daemon_json | bool
+  notify: restart docker
+
+- name: "기존 Docker daemon.json 존재 확인"
+  ansible.builtin.stat:
+    path: /etc/docker/daemon.json
+  register: _gpu_docker_daemon_stat
+  when: not (docker_manage_daemon_json | bool)
+
+- name: "기존 Docker daemon.json 읽기"
+  ansible.builtin.slurp:
+    src: /etc/docker/daemon.json
+  register: _gpu_docker_daemon_raw
+  when:
+    - not (docker_manage_daemon_json | bool)
+    - _gpu_docker_daemon_stat.stat.exists | default(false)
+
+- name: "nvidia-ctk로 Docker runtime 구성"
+  ansible.builtin.command:
+    cmd: >-
+      nvidia-ctk runtime configure --runtime=docker
+      {{ '--set-as-default' if docker_default_runtime_nvidia | bool else '' }}
+  register: _gpu_docker_ctk_configure
+  changed_when: _gpu_docker_ctk_configure.rc == 0
+  when:
+    - gpu_install_nvidia_container_toolkit | bool
+    - not (docker_manage_daemon_json | bool)
+    - "'nvidia-container-runtime' not in (_gpu_docker_daemon_raw.content | default('') | b64decode)"
+  notify: restart docker

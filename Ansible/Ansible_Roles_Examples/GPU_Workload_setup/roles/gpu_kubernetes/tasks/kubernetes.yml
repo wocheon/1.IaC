@@ -1,0 +1,89 @@
+---
+# ==========================================================================
+# Kubernetes GPU Worker Node - Host 레벨 설정만 담당
+#
+# 이 Role 의 책임 범위
+#   O  containerd 가 nvidia 런타임을 사용하도록 설정
+#   X  kubelet / kubeadm / containerd 설치  (클러스터 프로비저닝 계층의 책임)
+#   X  NVIDIA Device Plugin / GPU Operator 배포 (클러스터 계층의 책임)
+#
+# [DISRUPTIVE] containerd restart 는 노드의 모든 컨테이너에 영향을 준다.
+#              작업 전 `kubectl drain` 을 권장한다.
+# ==========================================================================
+
+- name: "containerd 실행 파일 확인"
+  ansible.builtin.stat:
+    path: /usr/bin/containerd
+  register: _gpu_containerd_bin
+
+- name: "containerd 설치 여부 검증"
+  ansible.builtin.assert:
+    that:
+      - _gpu_containerd_bin.stat.exists
+    fail_msg: >-
+      containerd 를 찾을 수 없습니다 (/usr/bin/containerd).
+      이 Role 은 Kubernetes 런타임을 설치하지 않습니다.
+      먼저 클러스터 프로비저닝 도구로 containerd 를 설치하세요.
+    quiet: true
+
+- name: "containerd 설정 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ kubernetes_containerd_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "containerd 기본 설정 파일 생성 (없을 때만)"
+  ansible.builtin.shell:
+    cmd: "containerd config default > {{ kubernetes_containerd_config_path }}"
+    creates: "{{ kubernetes_containerd_config_path }}"
+  when: kubernetes_generate_containerd_config | bool
+  notify: restart containerd
+
+- name: "containerd 설정 파일 존재 확인"
+  ansible.builtin.stat:
+    path: "{{ kubernetes_containerd_config_path }}"
+  register: _gpu_containerd_config_stat
+
+- name: "containerd 설정 파일 검증"
+  ansible.builtin.assert:
+    that:
+      - _gpu_containerd_config_stat.stat.exists
+      - _gpu_containerd_config_stat.stat.isreg
+    fail_msg: >-
+      containerd 설정 파일이 없습니다: {{ kubernetes_containerd_config_path }}.
+      kubernetes_generate_containerd_config=true 로 생성하거나 기존 설정 경로를 지정하세요.
+    quiet: true
+
+- name: "containerd 설정 파일 읽기"
+  ansible.builtin.slurp:
+    src: "{{ kubernetes_containerd_config_path }}"
+  register: _gpu_containerd_config_raw
+
+- name: "containerd nvidia 런타임 설정 상태 판정"
+  ansible.builtin.set_fact:
+    _gpu_containerd_config: "{{ _gpu_containerd_config_raw.content | b64decode }}"
+
+- name: "nvidia-ctk 로 containerd 런타임 설정"
+  ansible.builtin.command:
+    cmd: >-
+      nvidia-ctk runtime configure --runtime=containerd
+      --config={{ kubernetes_containerd_config_path }}
+      {{ '--set-as-default' if kubernetes_set_nvidia_default_runtime | bool else '' }}
+  register: _gpu_ctk_containerd
+  changed_when: _gpu_ctk_containerd.rc == 0
+  when: >-
+    ('runtimes.nvidia' not in _gpu_containerd_config)
+    or (kubernetes_set_nvidia_default_runtime | bool
+        and 'default_runtime_name = "nvidia"' not in _gpu_containerd_config)
+  notify: restart containerd
+
+- name: "Kubernetes GPU 구성 안내"
+  ansible.builtin.debug:
+    msg:
+      - "호스트 런타임 설정이 완료되었습니다."
+      - "GPU 를 Pod 에 노출하려면 클러스터 계층에서 다음 중 하나가 필요합니다."
+      - "  1) NVIDIA Device Plugin (DaemonSet) 배포"
+      - "  2) NVIDIA GPU Operator 배포 (이 경우 Operator와 Role의 관리 범위를 중복하지 마세요)"
+      - "기본 런타임 미사용 시(kubernetes_set_nvidia_default_runtime=false) RuntimeClass 'nvidia' 를 생성해야 합니다."

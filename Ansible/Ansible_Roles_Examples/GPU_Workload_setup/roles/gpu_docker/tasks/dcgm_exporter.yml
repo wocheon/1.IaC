@@ -1,0 +1,52 @@
+---
+- name: "DCGM Exporter image 설정 검증"
+  ansible.builtin.assert:
+    that:
+      - gpu_install_nvidia_container_toolkit | bool
+      - dcgm_exporter_image | length > 0
+      - "':' in dcgm_exporter_image"
+      - not dcgm_exporter_image.endswith(':latest')
+    fail_msg: >-
+      DCGM Exporter 컨테이너에는 NVIDIA Container Toolkit이 필요하며,
+      dcgm_exporter_image에 latest가 아닌 NVIDIA 지원 버전 tag를 지정해야 합니다.
+    quiet: true
+
+- name: "DCGM Exporter systemd unit 설치"
+  ansible.builtin.template:
+    src: gpu-dcgm-exporter.service.j2
+    dest: "/etc/systemd/system/{{ dcgm_exporter_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart dcgm exporter
+
+- name: "DCGM Exporter 서비스 활성화"
+  ansible.builtin.systemd:
+    name: "{{ dcgm_exporter_service_name }}"
+    enabled: true
+    daemon_reload: true
+
+- name: "DCGM Exporter 서비스 시작"
+  ansible.builtin.systemd:
+    name: "{{ dcgm_exporter_service_name }}"
+    state: started
+  when: not (gpu_reboot_required | default(false) | bool)
+
+- name: "DCGM Exporter 시작 연기 안내"
+  ansible.builtin.debug:
+    msg: "Driver 적용을 위한 reboot 이후 활성화된 DCGM Exporter 서비스가 시작됩니다."
+  when: gpu_reboot_required | default(false) | bool
+
+- name: "DCGM Exporter metrics endpoint 검증"
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ dcgm_exporter_port }}/metrics"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: _gpu_docker_dcgm_metrics
+  retries: 5
+  delay: 2
+  until: _gpu_docker_dcgm_metrics.status | default(0) == 200
+  when:
+    - gpu_verify_installation | bool
+    - not (gpu_reboot_required | default(false) | bool)

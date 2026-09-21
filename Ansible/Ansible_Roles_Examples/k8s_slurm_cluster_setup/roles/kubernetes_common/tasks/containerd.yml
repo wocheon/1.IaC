@@ -1,0 +1,43 @@
+---
+- name: "containerd 설치"
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "containerd 설정 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ kubernetes_containerd_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "containerd 기본 설정 생성"
+  ansible.builtin.shell:
+    cmd: "containerd config default > {{ kubernetes_containerd_config_path }}"
+    creates: "{{ kubernetes_containerd_config_path }}"
+  notify: restart containerd
+
+- name: "containerd CRI plugin 활성화"
+  ansible.builtin.replace:
+    path: "{{ kubernetes_containerd_config_path }}"
+    regexp: '^disabled_plugins\s*=\s*\[\s*["'']cri["'']\s*\]'
+    replace: 'disabled_plugins = []'
+  notify: restart containerd
+
+- name: "containerd systemd cgroup 활성화"
+  ansible.builtin.replace:
+    path: "{{ kubernetes_containerd_config_path }}"
+    regexp: '^(\s*SystemdCgroup\s*=\s*)false$'
+    replace: '\1true'
+  when: kubernetes_containerd_systemd_cgroup | bool
+  notify: restart containerd
+
+- name: "containerd 서비스 활성화"
+  ansible.builtin.systemd:
+    name: containerd
+    enabled: true
+    state: started
+

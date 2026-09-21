@@ -1,0 +1,2 @@
+# Ansible managed - gpu_docker role
+deb [arch={{ _gpu_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} {{ docker_apt_channel }}

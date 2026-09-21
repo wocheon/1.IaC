@@ -1,0 +1,50 @@
+---
+- name: "검증: docker info"
+  ansible.builtin.command:
+    cmd: docker info --format '{% raw %}{{ .ServerVersion }}{% endraw %}'
+  register: _gpu_docker_v_docker
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "검증: nvidia-container-cli info"
+  ansible.builtin.command:
+    cmd: nvidia-container-cli info
+  register: _gpu_docker_v_nct
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when:
+    - gpu_install_nvidia_container_toolkit | bool
+    - not (gpu_reboot_required | default(false) | bool)
+
+- name: "Docker 검증 실패 항목 집계"
+  ansible.builtin.set_fact:
+    _gpu_docker_verify_failures: >-
+      {{
+        ([] if (_gpu_docker_v_docker.rc | default(1)) == 0
+           else ['docker info 실행 실패: ' ~ (_gpu_docker_v_docker.stderr | default('') | trim)])
+        + ([] if (_gpu_docker_v_nct.skipped | default(false)) or (_gpu_docker_v_nct.rc | default(1)) == 0
+           else ['nvidia-container-cli info 실행 실패: ' ~
+                 (_gpu_docker_v_nct.stderr | default('') | trim)])
+      }}
+
+- name: "Docker 검증 결과"
+  ansible.builtin.debug:
+    msg:
+      - "docker  : {{ _gpu_docker_v_docker.stdout | default('failed', true) | trim }}"
+      - "toolkit : {{ _gpu_docker_v_nct.rc | default('skipped') }}"
+
+- name: "Docker 검증 실패 경고"
+  ansible.builtin.debug:
+    msg: "[검증 경고] {{ _gpu_docker_verify_failures }}"
+  when:
+    - _gpu_docker_verify_failures | length > 0
+    - not (gpu_verify_fail_on_error | bool)
+
+- name: "Docker 검증 실패 시 중단"
+  ansible.builtin.fail:
+    msg: "Docker GPU 환경 검증 실패: {{ _gpu_docker_verify_failures }}"
+  when:
+    - _gpu_docker_verify_failures | length > 0
+    - gpu_verify_fail_on_error | bool

@@ -1,0 +1,32 @@
+---
+gpu_install_driver: true
+gpu_install_cuda: true
+gpu_install_cudnn: false
+gpu_install_pytorch: true
+gpu_install_tensorflow: false
+
+gpu_python_version: "3"
+gpu_python_venv_path: /opt/gpu-venv
+gpu_python_venv_owner: root
+gpu_python_venv_group: root
+
+pytorch_version: ""
+pytorch_packages:
+  - torch
+  - torchvision
+  - torchaudio
+pytorch_index_url: "https://download.pytorch.org/whl/cu{{ cuda_version | replace('.', '') }}"
+
+tensorflow_version: ""
+tensorflow_package: "tensorflow[and-cuda]"
+
+# 선택적 Host DCGM. Driver 적용 후 별도 운영 점검/모니터링이 필요할 때만 활성화한다.
+gpu_install_dcgm: false
+dcgm_cuda_major: "{{ cuda_version.split('.')[0] }}"
+dcgm_package: "datacenter-gpu-manager-4-cuda{{ dcgm_cuda_major }}"
+dcgm_service_name: nvidia-dcgm
+dcgm_run_diagnostics: false
+dcgm_diagnostic_level: "1"
+
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true
