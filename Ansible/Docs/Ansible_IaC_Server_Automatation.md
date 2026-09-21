@@ -67,18 +67,24 @@ Ansible은 대부분의 Module에서 대상 서버의 현재 상태를 확인하
 
 **\[ nginx 패키지 설치용 Task\]**
 
-| \- name: Install nginx  ansible.builtin.package:    name: nginx    state: present |
-| :---- |
+```yaml
+- name: Install nginx
+  ansible.builtin.package:
+    name: nginx
+    state: present
+```
 
 최초 실행 시 패키지가 설치되지 않은 상태라면 결과 출력 시 다음과 같이 changed로 표기된다.
 
-| changed: \[web-01\] |
-| :---- |
+```text
+changed: [web-01]
+```
 
 이후 동일한 Task를 다시 실행하면 이미 해당 Package가 설치된 상태이므로 다시 설치하지 않고 Task가 완료되며, 결과출력 시 ok로 표기된다.
 
-| ok: \[web-01\] |
-| :---- |
+```text
+ok: [web-01]
+```
 
 이러한 멱등성을 활용하면 동일한 Playbook을 여러 서버에 반복 실행하거나, 기존 서버와 신규 서버에 동일하게 적용하더라도 필요한 작업만 수행하도록 구성할 수 있다. 이를 통해 서버별 설정 차이를 줄이고 반복적인 운영 작업을 보다 안정적으로 수행할 수 있다.
 
@@ -88,8 +94,12 @@ Ansible은 대부분의 Module에서 대상 서버의 현재 상태를 확인하
 
 **\[shell 모듈의 changed\_when 적용 예시\]**
 
-| \- name: Check config  shell: /usr/local/bin/check\_config.sh  register: result  changed\_when: "'updated' in result.stdout" |
-| :---- |
+```yaml
+- name: Check config
+  shell: /usr/local/bin/check_config.sh
+  register: result
+  changed_when: "'updated' in result.stdout"
+```
 
 **\-\> “updated” 라는 결과값이 나오면 변경이 일어난 것으로 간주함**
 
@@ -103,8 +113,17 @@ Ansible은 일반적으로 SSH를 통해 대상 서버에 연결하므로 Linux 
 
 **\[각 OS별 Ansible 설치 방법\]**
 
-| *\# RedHat (Rocky)*dnf install \-y ansible-core*\# Debian*apt updateapt install \-y ansible*\# Ansible 버전 확인* ansible \--version |
-| :---- |
+```bash
+# RedHat (Rocky)
+dnf install -y ansible-core
+
+# Debian
+apt update
+apt install -y ansible
+
+# Ansible 버전 확인
+ansible --version
+```
 
 ## 2.2 Ansible Inventory
 
@@ -120,20 +139,45 @@ Ansible은 일반적으로 SSH를 통해 대상 서버에 연결하므로 Linux 
 
 **\[ Inventory 파일 구성 예시\]**
 
-| *\# IP만으로 구성 (SSH 키와 User는 현재 계정의 값을 사용)*\[web\]10.0.0.1010.0.0.20\[db\]10.0.0.30*\# IP, User, SSH 키를 별도 지정하여 구성*\[web\]web-01 ansible\_host=\<SERVER\_IP\> ansible\_user=\<USERNAME\> ansible\_ssh\_private\_key\_file=\<PRIVATE\_KEY\_PATH\>web-02 ansible\_host=\<SERVER\_IP\> ansible\_user=\<USERNAME\> ansible\_ssh\_private\_key\_file=\<PRIVATE\_KEY\_PATH\>\[db\]db-01 ansible\_host=\<SERVER\_IP\> ansible\_user=\<USERNAME\> ansible\_ssh\_private\_key\_file=\<PRIVATE\_KEY\_PATH\> |
-| :---- |
+```ini
+# IP만으로 구성 (SSH 키와 User는 현재 계정의 값을 사용)
+[web]
+10.0.0.10
+10.0.0.20
+
+[db]
+10.0.0.30
+
+# IP, User, SSH 키를 별도 지정하여 구성
+[web]
+web-01 ansible_host=<SERVER_IP> ansible_user=<USERNAME> ansible_ssh_private_key_file=<PRIVATE_KEY_PATH>
+web-02 ansible_host=<SERVER_IP> ansible_user=<USERNAME> ansible_ssh_private_key_file=<PRIVATE_KEY_PATH>
+
+[db]
+db-01 ansible_host=<SERVER_IP> ansible_user=<USERNAME> ansible_ssh_private_key_file=<PRIVATE_KEY_PATH>
+```
 
 인벤토리는 ansible-inventory 명령으로 구조를 확인할 수 있다. 실제 실행 전 어떤 그룹과 호스트가 잡히는지 보는 데 유용하다.
 
-| *\#JSON 형태로 Inventory 목록을 출력*ansible-inventory \-i inventory.ini \--list*\# Graph(Tree) 형태로 Inventory 목록 출력*ansible-inventory \-i inventory.ini \--graph |
-| :---- |
+```bash
+# JSON 형태로 Inventory 목록을 출력
+ansible-inventory -i inventory.ini --list
+
+# Graph(Tree) 형태로 Inventory 목록 출력
+ansible-inventory -i inventory.ini --graph
+```
 
 ## 2.3 Ansible 명령 기본 사용법
 
 플레이북을 작성하지 않고도 ansible 명령을 통해  간단한 일회성 작업이 가능하다.
 
-| *\# 전체 인벤토리에 Ping 모듈로 연결 확인  \#(대상 Host에 Ansible로 접속하여 Module을 실행 가능한지 확인)*ansible all \-m ping*\# inventory.ini 파일에 등록된 web 그룹에 command 모듈을 사용하여 uptime 명령 실행*ansible web \-i inventory.ini \-m command \-a "uptime" |
-| :---- |
+```bash
+# 전체 인벤토리에 Ping 모듈로 연결 확인  #(대상 Host에 Ansible로 접속하여 Module을 실행 가능한지 확인)
+ansible all -m ping
+
+# inventory.ini 파일에 등록된 web 그룹에 command 모듈을 사용하여 uptime 명령 실행
+ansible web -i inventory.ini -m command -a "uptime"
+```
 
 * \-m : 사용할 모듈을 지정하는 옵션  
 * \-i : 인벤토리 파일을 별도로 사용하는 경우 사용   
@@ -149,8 +193,27 @@ Ansible-Playbook YAML파일에 명시된 Task는 위에서 아래로 순서대�
 
 **\[Playbook YAML파일 예시 \- nginx 패키지 설치\]**
 
-| \- name: web server baseline  hosts: web  remote\_user: user1  become: true  gather\_facts: true  vars:    package\_name: nginx  tasks:    \- name: install package      package:        name: "{{ package\_name }}"        state: present    \- name: ensure service is running      service:        name: nginx        state: started        enabled: true |
-| :---- |
+```yaml
+- name: web server baseline
+  hosts: web
+  remote_user: user1
+  become: true
+  gather_facts: true
+  vars:
+    package_name: nginx
+
+  tasks:
+    - name: install package
+      package:
+        name: "{{ package_name }}"
+        state: present
+
+    - name: ensure service is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+```
 
 **\[Playbook  기본 옵션\]**
 
@@ -167,8 +230,13 @@ Ansible-Playbook YAML파일에 명시된 Task는 위에서 아래로 순서대�
 
 기존 ansible 명령과 동일하게 \-i 옵션을 통해 인벤토리 파일을 지정 가능하다.
 
-| *\# 기본 Inventory 파일을 사용해 Ansible-playbook 실행* ansible-playbook example.yml *\# Ansible-playbook 실행 시 특정 인벤토리 파일 사용* ansible-playbook \-i inventory.ini example.yml |
-| :---- |
+```bash
+# 기본 Inventory 파일을 사용해 Ansible-playbook 실행
+ansible-playbook example.yml
+
+# Ansible-playbook 실행 시 특정 인벤토리 파일 사용
+ansible-playbook -i inventory.ini example.yml
+```
 
 **\[ansible-playbook 명령의 주요 옵션\]**
 
@@ -196,8 +264,19 @@ Ansible-Playbook의 Task 별 실행 결과는 각 Task 별 실행 결과에 따�
 
 **\[실행 결과 출력 예시\]**
 
-| PLAY \[run command\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*TASK \[ls scripts\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*changed: \[10.0.0.10\]TASK \[debug\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*ok: \[10.0.0.10\] \=\> {    "msg": \[        \[\]    \]}PLAY RECAP \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*10.0.0.10                : ok=2    changed=1    unreachable=0    failed\=0    skipped=0    rescued=0    ignored=0 |
-| :---- |
+```text
+PLAY [run command] ************************************************************************************************************************************
+TASK [ls scripts] ********************************************************************************************************************************************
+changed: [10.0.0.10]
+TASK [debug] *************************************************************************************************************************************************
+ok: [10.0.0.10] => {
+    "msg": [
+        []
+    ]
+}
+PLAY RECAP ***************************************************************************************************************************************************
+10.0.0.10                : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
 
 ## 3.2 Module과 Task
 
@@ -228,8 +307,34 @@ Task는 플레이북 안에서 하나의 모듈 호출을 설명하는 단위를
 
 **\[여러 모듈을 사용한 Playbook YAML 작성 예시  \- Bash 스크립트 배포 및 실행\]**
 
-| \- name: copy script file  hosts: web  remote\_user: sysadm  become: true  gather\_facts: no  vars:    file\_nm: test\_script.sh  tasks:    \- name: copy script file 1      copy:        src: "scripts/{{ file\_nm }}"        dest: "/home/sysadm/scripts/{{ file\_nm }}"        mode: "0755"      tags: copy\_task    \- name: Run scripts      shell: |        bash /home/sysadm/scripts/{{ file\_nm }}      environment:        LANG: en\_US.UTF-8      tags: run\_task      register: run\_results    \- name: debug "Run Scripts"      debug: var=run\_results.stdout\_lines |
-| :---- |
+```yaml
+- name: copy script file
+  hosts: web
+  remote_user: sysadm
+  become: true
+  gather_facts: no
+  vars:
+    file_nm: test_script.sh
+
+  tasks:
+    - name: copy script file 1
+      copy:
+        src: "scripts/{{ file_nm }}"
+        dest: "/home/sysadm/scripts/{{ file_nm }}"
+        mode: "0755"
+      tags: copy_task
+
+    - name: Run scripts
+      shell: |
+        bash /home/sysadm/scripts/{{ file_nm }}
+      environment:
+        LANG: en_US.UTF-8
+      tags: run_task
+      register: run_results
+
+    - name: debug "Run Scripts"
+      debug: var=run_results.stdout_lines
+```
 
 ## 3.3 변수와 vars\_files
 
@@ -239,20 +344,68 @@ Task는 플레이북 안에서 하나의 모듈 호출을 설명하는 단위를
 
 **\[vars\_file 구성\]**
 
-| *\#vars\_file.yaml*package\_name: openjdk-25-jreservice\_name: nginx.service |
-| :---- |
+```yaml
+# vars_file.yaml
+package_name: openjdk-25-jre
+service_name: nginx.service
+```
 
 **\[Playbook 구성\]**
 
-| \- name: install package with vars file  hosts: web  become: true  gather\_facts: false  vars\_files:    \- vars\_file.yaml  vars:    package\_name: gzip   *\# vars\_files와 동일 변수의 값을 지정*  tasks:    \- name: debug "package\_name"      debug:        msg: "{{ package\_name }}"    \- name: install package      apt:        name: "{{ package\_name }}"        state: present      register: install\_results    \- name: Get service status      service\_facts:    \- name: debug "Get service status"      debug:        msg: "{{ ansible\_facts.services\[service\_name\].state }}" |
-| :---- |
+```yaml
+- name: install package with vars file
+  hosts: web
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars_file.yaml
+  vars:
+    package_name: gzip   # vars_files와 동일 변수의 값을 지정
+  tasks:
+    - name: debug "package_name"
+      debug:
+        msg: "{{ package_name }}"
+
+    - name: install package
+      apt:
+        name: "{{ package_name }}"
+        state: present
+      register: install_results
+
+    - name: Get service status
+      service_facts:
+
+    - name: debug "Get service status"
+      debug:
+        msg: "{{ ansible_facts.services[service_name].state }}"
+```
 
 **\[실행 결과\]**
 
 - vars\_file에 있는 package\_name 변수가 사용됨
 
-| PLAY \[install package with vars file\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*TASK \[debug "install package"\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*ok: \[10.0.0.100\] \=\> {    "msg": "openjdk-25-jre"}TASK \[install package\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*ok: \[10.0.0.100\]TASK \[Get service status\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*ok: \[10.0.0.100\]TASK \[debug "Get service status"\] \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*ok: \[10.0.0.100\] \=\> {    "msg": "running"}PLAY RECAP \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*10.0.0.100                : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 |
-| :---- |
+```text
+PLAY [install package with vars file] ********************************************************************************************
+
+TASK [debug "install package"] ********************************************************************************************
+ok: [10.0.0.100] => {
+    "msg": "openjdk-25-jre"
+}
+
+TASK [install package] ********************************************************************************************
+ok: [10.0.0.100]
+
+TASK [Get service status] ********************************************************************************************
+ok: [10.0.0.100]
+
+TASK [debug "Get service status"] ********************************************************************************************
+ok: [10.0.0.100] => {
+    "msg": "running"
+}
+
+PLAY RECAP ********************************************************************************************
+10.0.0.100                : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
 
 ## 3.4 register와 set\_fact
 
@@ -264,8 +417,27 @@ set\_fact는 Playbook 실행 도중 새로운 변수를 생성하거나 기존 �
 
 **\[register와 set\_fact 사용 예시 \- Nginx 설정 상태 확인\]**
 
-| \- name: Check nginx configuration  hosts: web  become: true  gather\_facts: false  tasks:    \- name: Run nginx config test      command: nginx \-t      register: nginx\_check      changed\_when: false      failed\_when: false *\# nginx \-t가 실패해도 즉시 중단하지 않음*    \- name: Set nginx config status      set\_fact:        nginx\_config\_valid: "{{ nginx\_check.rc \== 0 }}"    \- name: Show nginx config check result      debug:        msg: "Nginx config valid: {{ nginx\_config\_valid }}" |
-| :---- |
+```yaml
+- name: Check nginx configuration
+  hosts: web
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Run nginx config test
+      command: nginx -t
+      register: nginx_check
+      changed_when: false
+      failed_when: false # nginx -t가 실패해도 즉시 중단하지 않음
+
+    - name: Set nginx config status
+      set_fact:
+        nginx_config_valid: "{{ nginx_check.rc == 0 }}"
+
+    - name: Show nginx config check result
+      debug:
+        msg: "Nginx config valid: {{ nginx_config_valid }}"
+```
 
 다음과 같이 register를 사용해서 실행 결과를 저장하고, 이를 set\_fact로 변수화해서 사용하는 등의 활용이 가능하다.
 
@@ -281,8 +453,40 @@ ex) OS가 debian 인지 아니면 Redhat 계열인지 확인 후 Task 수행
 - gather\_facts를 통해 수집된 시스템 정보 변수로 대상별 OS 계열을 구분하고 각 OS 계열별 Task에 when 조건문을 추가   
 - 각 OS에 맞춰 적절한 패키지 명이 사용되도록 set\_fact로 변수 지정
 
-| \- name: Install Apache Web Server  hosts: all  become: true  gather\_facts: true  tasks:    \- name: Set Apache package name for RedHat family      ansible.builtin.set\_fact:        apache\_package: httpd      when: ansible\_facts\['os\_family'\] \== 'RedHat'    \- name: Set Apache package name for Debian family      ansible.builtin.set\_fact:        apache\_package: apache2      when: ansible\_facts\['os\_family'\] \== 'Debian'    \- name: Install Apache package      ansible.builtin.package:        name: "{{ apache\_package }}"        state: present      register: apache\_install\_result    \- name: Show install result      ansible.builtin.debug:        var: apache\_install\_result    \- name: Start Apache service      ansible.builtin.service:        name: "{{ apache\_package }}"        state: started        enabled: true      when: apache\_install\_result is succeeded |
-| :---- |
+```yaml
+- name: Install Apache Web Server
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Set Apache package name for RedHat family
+      ansible.builtin.set_fact:
+        apache_package: httpd
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Set Apache package name for Debian family
+      ansible.builtin.set_fact:
+        apache_package: apache2
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Install Apache package
+      ansible.builtin.package:
+        name: "{{ apache_package }}"
+        state: present
+      register: apache_install_result
+
+    - name: Show install result
+      ansible.builtin.debug:
+        var: apache_install_result
+
+    - name: Start Apache service
+      ansible.builtin.service:
+        name: "{{ apache_package }}"
+        state: started
+        enabled: true
+      when: apache_install_result is succeeded
+```
 
 ## 3.6 Handler
 
@@ -307,8 +511,26 @@ When과 handler 모두 조건에 따른 Task 실행을 제어하나 사용하는
 
 **\[Handler 사용 예시 \- 설정 파일이 변경되면 httpd 서비스 재기동\]**
 
-| tasks:  \- name: Copy Task A    copy:      src: a.conf      dest: /tmp/a.conf    notify: Restart httpd  \- name: Copy Task B    copy:      src: b.conf      dest: /tmp/b.conf    notify: Restart httpdhandlers:  \- name: Restart httpd    ansible.builtin.service:      name: httpd      state: restarted |
-| :---- |
+```yaml
+tasks:
+  - name: Copy Task A
+    copy:
+      src: a.conf
+      dest: /tmp/a.conf
+    notify: Restart httpd
+
+  - name: Copy Task B
+    copy:
+      src: b.conf
+      dest: /tmp/b.conf
+    notify: Restart httpd
+
+handlers:
+  - name: Restart httpd
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+```
 
 **\-\> Copy Task A, B가 모두 Changed라도 ‘Restart httpd’ Handler는 두 Task 완료 후 한 번만 실행**
 
@@ -318,15 +540,41 @@ When과 handler 모두 조건에 따른 Task 실행을 제어하나 사용하는
 
 **\[ 리스트 변수와 loop를 사용한 예시 \- 한 Task 내에서 여러 패키지를 한 번에 설치\]**
 
-| vars:  packages:    \- git    \- curl    \- wgettasks:  \- name: Install packages    ansible.builtin.package:      name: "{{ item }}"      state: present    loop: "{{ packages }}" |
-| :---- |
+```yaml
+vars:
+  packages:
+    - git
+    - curl
+    - wget
+
+tasks:
+  - name: Install packages
+    ansible.builtin.package:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ packages }}"
+```
 
 만약 리스트가 단순 문자열이 아니라 Dictionary 형태라면 item.name, item.path처럼 필드를 참조 가능하다.
 
 **\[ Dictionary 변수와 loop를 사용한 예시 \- 다수의 유저 생성\]**
 
-| vars:  users:    \- name: appuser      shell: /bin/bash    \- name: deploy      shell: /bin/bashtasks:  \- name: Create users    user:      name: "{{ item.name }}"      shell: "{{ item.shell }}"      state: present    loop: "{{ users }}" |
-| :---- |
+```yaml
+vars:
+  users:
+    - name: appuser
+      shell: /bin/bash
+    - name: deploy
+      shell: /bin/bash
+
+tasks:
+  - name: Create users
+    user:
+      name: "{{ item.name }}"
+      shell: "{{ item.shell }}"
+      state: present
+    loop: "{{ users }}"
+```
 
 with\_items는 기존 Ansible에서 사용하던 반복 방식으로, 단순 리스트 반복에서는 loop와 유사하게 사용할 수 있다. 
 
@@ -336,8 +584,16 @@ with\_items는 기존 Ansible에서 사용하던 반복 방식으로, 단순 리
 
 **\[with\_items를 사용한 리스트 변수 처리 예시 \- 여러 패키지 동시 설치\]**
 
-| \- name: Install packages  package:    name: "{{ item }}"    state: present  with\_items:    \- git    \- curl    \- wget |
-| :---- |
+```yaml
+- name: Install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+    - curl
+    - wget
+```
 
 ## 3.8 Tag
 
@@ -349,13 +605,46 @@ Playbook의 특정 Task 등에 별도의 Tag를 지정해두면 해당 태그가
 
 **\[ tag 활용 Task 구성 예시 \- httpd 설치 playbook\]**
 
-| \- name: Configure Apache  hosts: web  become: true  tasks:    \- name: Install Apache      ansible.builtin.package:        name: httpd        state: present      tags:        \- install    \- name: Copy Apache config      ansible.builtin.copy:        src: httpd.conf        dest: /etc/httpd/conf/httpd.conf      tags:        \- config    \- name: Restart Apache      ansible.builtin.service:        name: httpd        state: restarted      tags:        \- restart |
-| :---- |
+```yaml
+- name: Configure Apache
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Install Apache
+      ansible.builtin.package:
+        name: httpd
+        state: present
+      tags:
+        - install
+
+    - name: Copy Apache config
+      ansible.builtin.copy:
+        src: httpd.conf
+        dest: /etc/httpd/conf/httpd.conf
+      tags:
+        - config
+
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+      tags:
+        - restart
+```
 
 **\[ tag 활용 Task 구성 예시 \- tag 별 실행 방식\]**
 
-| *\# 특정 Tag만 실행*ansible-playbook web.yml \--tags config*\# 여러 Tag 실행* ansible-playbook web.yml \--tags "config,restart"*\# 특정 Tag를 제외 하여 실행*ansible-playbook web.yml \--skip-tags restart |
-| :---- |
+```bash
+# 특정 Tag만 실행
+ansible-playbook web.yml --tags config
+
+# 여러 Tag 실행
+ansible-playbook web.yml --tags "config,restart"
+
+# 특정 Tag를 제외 하여 실행
+ansible-playbook web.yml --skip-tags restart
+```
 
 # 4\. Playbook 구조화 및 재사용 
 
@@ -373,32 +662,79 @@ Include\_tasks를 사용하면 별도 파일에 정의된 Task 목록을 Playboo
 
 **\[include\_tasks를 활용한 기능별 Task 분리 구성 예시\]**
 
-| playbooks/├── main.yaml└── tasks/    ├── packages.yaml    ├── users.yaml    └── service.yaml |
-| :---- |
+```text
+playbooks/
+├── main.yaml
+└── tasks/
+    ├── packages.yaml
+    ├── users.yaml
+    └── service.yaml
+```
 
 * Main.yaml  
   *  공통 변수와 Task의  실행 순서를 관리한다.
 
-| \- name: Configure web servers  hosts: web  become: true  gather\_facts: true  vars:    app\_user: appuser    app\_packages:      \- nginx      \- curl  tasks:    \- name: Include package tasks      ansible.builtin.include\_tasks: tasks/packages.yaml    \- name: Include user tasks      ansible.builtin.include\_tasks: tasks/users.yaml    \- name: Include service tasks      ansible.builtin.include\_tasks: tasks/service.yaml |
-| :---- |
+```yaml
+- name: Configure web servers
+  hosts: web
+  become: true
+  gather_facts: true
+
+  vars:
+    app_user: appuser
+    app_packages:
+      - nginx
+      - curl
+
+  tasks:
+    - name: Include package tasks
+      ansible.builtin.include_tasks: tasks/packages.yaml
+
+    - name: Include user tasks
+      ansible.builtin.include_tasks: tasks/users.yaml
+
+    - name: Include service tasks
+      ansible.builtin.include_tasks: tasks/service.yaml
+```
 
 * tasks/packages.yaml  
   * 패키지 설치만 담당
 
-| \- name: install required packages  package:    name: "{{ app\_packages }}"    state: present |
-| :---- |
+```yaml
+- name: install required packages
+  package:
+    name: "{{ app_packages }}"
+    state: present
+```
 
 * tasks/users.yaml  
   * 계정과 디렉터리 구성
 
-| \- name: create application user  user:    name: "{{ app\_user }}"    state: present\- name: create application directory  file:    path: /opt/app    state: directory    owner: "{{ app\_user }}"    group: "{{ app\_user }}"    mode: "0755" |
-| :---- |
+```yaml
+- name: create application user
+  user:
+    name: "{{ app_user }}"
+    state: present
+
+- name: create application directory
+  file:
+    path: /opt/app
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0755"
+```
 
 * tasks/service.yaml  
   * 서비스 상태를 관리
 
-| \- name: ensure nginx is enabled and running  service:    name: nginx    state: started    enabled: true |
-| :---- |
+```yaml
+- name: ensure nginx is enabled and running
+  service:
+    name: nginx
+    state: started
+    enabled: true
+```
 
 이러한 방식을 사용하면 각 기능별 실행 흐름 파악이 용이하며, 필요한 부분만 수정하거나 재사용하기 쉬운 구조로 Playbook을 관리할 수 있다.
 
@@ -410,30 +746,75 @@ Template은 Jinja2 문법으로 동적 파일이나 메시지를 만든다. OS, 
 
 **\[ Nginx 용 Jinja2 템플릿 예시\]**
 
-| server {    listen {{ nginx\_port }};    server\_name {{ inventory\_hostname }};    root {{ document\_root }};    index index.html;    location / {        try\_files $uri $uri/ \=404;    }} |
-| :---- |
+```nginx
+server {
+    listen {{ nginx_port }};
+    server_name {{ inventory_hostname }};
+
+    root {{ document_root }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
 
 Template에서 서버별로 다른 변수를 사용 가능하도록 Inventory 파일 내에 변수를 설정한다.
 
-| \[web\]web01 ansible\_host=10.0.0.100 nginx\_port=80 document\_root=/var/www/service-aweb02 ansible\_host=10.0.0.200 nginx\_port=8080 document\_root=/var/www/service-b |
-| :---- |
+```ini
+[web]
+web01 ansible_host=10.0.0.100 nginx_port=80 document_root=/var/www/service-a
+web02 ansible_host=10.0.0.200 nginx_port=8080 document_root=/var/www/service-b
+```
 
 이후 template 파일을 통해 nginx의 config 파일을 배포하고 Handler로 서비스를 재시작한다.
 
-| \- name: Configure nginx  hosts: web  become: true  tasks:    \- name: Deploy nginx config from template      ansible.builtin.template:        src: nginx.conf.j2        dest: /etc/nginx/conf.d/app.conf        owner: root        group: root        mode: "0644"      notify: restart nginx  handlers:    \- name: restart nginx      ansible.builtin.service:        name: nginx        state: restarted |
-| :---- |
+```yaml
+- name: Configure nginx
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Deploy nginx config from template
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/app.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+```
 
 각 Host 별로 설정된 변수값에 따라 Template으로 배포되는 파일의 내용이 달라진다.
 
 **\[web-1 \- /etc/nginx/conf.d/app.conf \]**
 
-| server {    listen 80;    server\_name web01;    root /var/www/service-a;} |
-| :---- |
+```nginx
+server {
+    listen 80;
+    server_name web01;
+
+    root /var/www/service-a;
+}
+```
 
 **\[web-2 \- /etc/nginx/conf.d/app.conf \]**
 
-| server {    listen 8080;    server\_name web02;    root /var/www/service-b;} |
-| :---- |
+```nginx
+server {
+    listen 8080;
+    server_name web02;
+
+    root /var/www/service-b;
+}
+```
 
 이와 같이 파일 구조는 동일하지만 서버나 환경에 따라 일부 설정값이 달라지는 경우, Template을 사용하여 제어가 가능하다.
 
@@ -445,13 +826,36 @@ Role은 반복적으로 사용하는 Playbook 구성을 정해진 디렉토리 �
 
 **\[Nginx 서버 구성을 위한 Role 구성 예시\]**
 
-| ansible/├── main.yaml├── inventory└── roles/    └── nginx/        ├── defaults/        │   └── main.yml        ├── handlers/        │   └── main.yml        ├── tasks/        │   ├── main.yml        │   ├── Debian.yml        │   └── RedHat.yml        ├── templates/        │   └── nginx.conf.j2        └── vars/            └── main.yml |
-| :---- |
+```text
+ansible/
+├── main.yaml
+├── inventory
+└── roles/
+    └── nginx/
+        ├── defaults/
+        │   └── main.yml
+        ├── handlers/
+        │   └── main.yml
+        ├── tasks/
+        │   ├── main.yml
+        │   ├── Debian.yml
+        │   └── RedHat.yml
+        ├── templates/
+        │   └── nginx.conf.j2
+        └── vars/
+            └── main.yml
+```
 
 다음과 같이 프로젝트 상위의 main.yaml은 필요한 Role을 호출하여 사용이 가능하다.
 
-| \- name: Configure web servers  hosts: web  become: true  roles:    \- nginx |
-| :---- |
+```yaml
+- name: Configure web servers
+  hosts: web
+  become: true
+
+  roles:
+    - nginx
+```
 
 위와 같이 nginx Role을 지정하면 기본적으로 디렉토리 내의 roles/nginx/tasks/main.yml을 실행하게 된다. 이 파일 내에는 실제 Task를 작성하거나 필요한 경우 다른 Task 파일을 호출할 수 있다.
 
@@ -459,13 +863,23 @@ Role은 반복적으로 사용하는 Playbook 구성을 정해진 디렉토리 �
 
 - OS 계열에 따라 RedHat.yml, Debian.yml 등의 Task 파일을 별도로 실행하도록 구성
 
-| \- name: Include OS specific tasks  ansible.builtin.include\_tasks: "{{ ansible\_facts\['os\_family'\] }}.yml" |
-| :---- |
+```yaml
+- name: Include OS specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_facts['os_family'] }}.yml"
+```
 
 즉 Role을 호출했을 때의 실행 흐름은 다음과 같다.
 
-| main.yaml   ↓roles:  \- nginx   ↓roles/nginx/tasks/main.yml   ↓필요한 Task / Handler / Template 실행 |
-| :---- |
+```text
+main.yaml
+   ↓
+roles:
+  - nginx
+   ↓
+roles/nginx/tasks/main.yml
+   ↓
+필요한 Task / Handler / Template 실행
+```
 
 Role은 반복적으로 사용하는 서버 구성이나 표준화된 설정을 여러 Playbook에서 재사용하는 경우에 유용하다. 다만  단순한 서버 구성 작업이나 동일 구성을 반복해서 적용할 일이 많지 않다면 Role 구조를 적용하거나 Task 분리 작업이 오히려 관리 복잡도를 높일 수 있다.
 
@@ -495,8 +909,20 @@ Role은 반복적으로 사용하는 서버 구성이나 표준화된 설정을 
 
 **\[ 아키텍처 구성도\]**
 
-| Client  |  | HTTP : 80  vWEB Server(Rocky Linux 10\)Nginx Container  |  | Reverse Proxy  | HTTP : 8080  vWAS Server(Ubuntu 24.04 LTS)FastAPI Container |
-| :---- |
+```text
+Client
+  |
+  | HTTP : 80
+  v
+WEB Server(Rocky Linux 10)
+Nginx Container
+  |
+  | Reverse Proxy
+  | HTTP : 8080
+  v
+WAS Server(Ubuntu 24.04 LTS)
+FastAPI Container
+```
 
 ## 5.2 Ansible-Playbook 구성
 
@@ -510,13 +936,58 @@ Playbook은 하나의 파일에 모든 작업을 작성하지 않고 기능별 R
 
   * nginx\_proxy :  WEB 서버에서 Nginx 컨테이너를 실행하고 WAS 서버로 Reverse Proxy하도록 설정
 
-| ansible-web-was├── collections│   └── requirements.yml├── inventories│   └── example│       ├── group\_vars│       │   ├── all.yml│       │   ├── app.yml│       │   └── web.yml│       └── hosts.ini├── main.yaml└── roles    ├── docker\_engine    │   ├── defaults    │   │   └── main.yml    │   ├── handlers    │   │   └── main.yml    │   ├── tasks    │   │   ├── configure.yml    │   │   ├── debian.yml    │   │   ├── main.yml    │   │   └── redhat.yml    │   └── templates    │       └── daemon.json.j2    ├── fastapi\_app    │   ├── defaults    │   │   └── main.yml    │   ├── tasks    │   │   └── main.yml    │   └── templates    │       ├── Dockerfile.j2    │       ├── main.py.j2    │       └── requirements.txt.j2    └── nginx\_proxy        ├── defaults        │   └── main.yml        ├── tasks        │   └── main.yml        └── templates            └── default.conf.j2 |
-| :---- |
+```text
+ansible-web-was
+├── collections
+│   └── requirements.yml
+├── inventories
+│   └── example
+│       ├── group_vars
+│       │   ├── all.yml
+│       │   ├── app.yml
+│       │   └── web.yml
+│       └── hosts.ini
+├── main.yaml
+└── roles
+    ├── docker_engine
+    │   ├── defaults
+    │   │   └── main.yml
+    │   ├── handlers
+    │   │   └── main.yml
+    │   ├── tasks
+    │   │   ├── configure.yml
+    │   │   ├── debian.yml
+    │   │   ├── main.yml
+    │   │   └── redhat.yml
+    │   └── templates
+    │       └── daemon.json.j2
+    ├── fastapi_app
+    │   ├── defaults
+    │   │   └── main.yml
+    │   ├── tasks
+    │   │   └── main.yml
+    │   └── templates
+    │       ├── Dockerfile.j2
+    │       ├── main.py.j2
+    │       └── requirements.txt.j2
+    └── nginx_proxy
+        ├── defaults
+        │   └── main.yml
+        ├── tasks
+        │   └── main.yml
+        └── templates
+            └── default.conf.j2
+```
 
 변수는 Role의 defaults/main.yml에 정의된 기본값과 Inventory의 group\_vars에 정의된 공통 및 그룹별 변수 파일을 조합하여 사용한다.
 
-| roles/\*/defaults/main.yml            ↓inventories/example/group\_vars/all.yml *\# 공통 변수*inventories/example/group\_vars/app.yml *\# WAS 전용 변수*inventories/example/group\_vars/web.yml *\# WEB 전용 변수* |
-| :---- |
+```text
+roles/*/defaults/main.yml
+            ↓
+inventories/example/group_vars/all.yml # 공통 변수
+inventories/example/group_vars/app.yml # WAS 전용 변수
+inventories/example/group_vars/web.yml # WEB 전용 변수
+```
 
 ## 5.3 Inventory 구성
 
@@ -524,8 +995,18 @@ WEB과 WAS 서버를 각각 web, app 그룹으로 구분하고 두 그룹을 doc
 
 **\[inventories/example/hosts.ini\]**
 
-| \[docker\_targets:children\]webapp *\# ansible\_host : Ansible용 Host IP , private\_ip : Template 전달용 변수*\[web\]web-1 ansible\_host=192.168.1.10 private\_ip=192.168.1.10\[app\]was-1 ansible\_host=192.168.1.20 private\_ip=192.168.1.20 |
-| :---- |
+```ini
+[docker_targets:children]
+web
+app
+
+# ansible_host : Ansible용 Host IP, private_ip : Template 전달용 변수
+[web]
+web-1 ansible_host=192.168.1.10 private_ip=192.168.1.10
+
+[app]
+was-1 ansible_host=192.168.1.20 private_ip=192.168.1.20
+```
 
 ## 5.4 Main Playbook 구성
 
@@ -533,13 +1014,41 @@ WEB과 WAS 서버를 각각 web, app 그룹으로 구분하고 두 그룹을 doc
 
 **\[main.yaml\]**
 
-| \- name: Install Docker  hosts: docker\_targets  become: true           *\#* *sudo 등을 사용하여 root 권한으로 실행*  any\_errors\_fatal: true *\#* *호스트 중 하나라도 실패하면, Play 전체 중단*   roles:    \- docker\_engine\- name: Deploy FastAPI WAS  hosts: app  become: true  any\_errors\_fatal: true  roles:    \- fastapi\_app\- name: Deploy Nginx WEB  hosts: web  become: true  any\_errors\_fatal: true  roles:    \- nginx\_proxy |
-| :---- |
+```yaml
+- name: Install Docker
+  hosts: docker_targets
+  become: true           # sudo 등을 사용하여 root 권한으로 실행
+  any_errors_fatal: true # 호스트 중 하나라도 실패하면, Play 전체 중단
+  roles:
+    - docker_engine
+
+- name: Deploy FastAPI WAS
+  hosts: app
+  become: true
+  any_errors_fatal: true
+  roles:
+    - fastapi_app
+
+- name: Deploy Nginx WEB
+  hosts: web
+  become: true
+  any_errors_fatal: true
+  roles:
+    - nginx_proxy
+```
 
 각 Play 내에서 실행되는 동작은 다음과 같다.
 
-| 1\. docker\_targets   \- Docker Engine / containerd 설치          ↓2\. app   \- FastAPI Image Build 및 Container 실행          ↓3\. web   \- Nginx Reverse Proxy 구성 |
-| :---- |
+```text
+1. docker_targets
+   - Docker Engine / containerd 설치
+          ↓
+2. app
+   - FastAPI Image Build 및 Container 실행
+          ↓
+3. web
+   - Nginx Reverse Proxy 구성
+```
 
 각 Play에 any\_errors\_fatal: true를 설정하여 하나의 대상 서버에서 작업이 실패하면 다음 단계로 진행하지 않도록 구성한다. 예를 들어 FastAPI 상태 확인이 실패하면 WEB 구성이 진행되지 않고 끝난다.
 
@@ -555,8 +1064,29 @@ Debian 계열과 Redhat 계열의 Docker 설치 방법이 다르므로 OS별 Tas
 
 **\[ docker\_engine Role 동작 방식\]**
 
-| docker\_targets↓OS 확인┌────┴────┐Debian　 RedHat(Ubuntu)　(Rocky)↓　　　　 ↓APT　　　 DNF└────┬────┘↓Docker Engine \+ containerd 설치↓Docker / containerd 설정├─ daemon.json Template 배포└─ containerd 설정 적용↓설정 변경 시 Handler 실행├─ containerd 재기동└─ Docker 재기동↓서비스 상태 및 설정값 검증  |
-| :---- |
+```text
+docker_targets
+↓
+OS 확인
+┌────┴────┐
+Debian　 RedHat
+(Ubuntu)　(Rocky)
+↓　　　　 ↓
+APT　　　 DNF
+└────┬────┘
+↓
+Docker Engine + containerd 설치
+↓
+Docker / containerd 설정
+├─ daemon.json Template 배포
+└─ containerd 설정 적용
+↓
+설정 변경 시 Handler 실행
+├─ containerd 재기동
+└─ Docker 재기동
+↓
+서비스 상태 및 설정값 검증
+```
 
 ## 5.6 Role \- fastapi\_app
 
@@ -570,8 +1100,27 @@ FastAPI 기반 WAS 구성을 위한 Role로 app 그룹의 WAS 서버에서 실�
 
 **\[ fastapi\_app Role 동작 방식\]**
 
-| app↓FastAPI 변수 검증↓Template 사용Build Context 생성├─ Dockerfile├─ requirements.txt└─ app/main.py↓Docker Image 존재 및 변경 여부 확인↓필요한 경우 Image Build↓FastAPI Container 실행↓/health 상태 확인↓FastAPI 정상 동작 검증 |
-| :---- |
+```text
+app
+↓
+FastAPI 변수 검증
+↓
+Template 사용
+Build Context 생성
+├─ Dockerfile
+├─ requirements.txt
+└─ app/main.py
+↓
+Docker Image 존재 및 변경 여부 확인
+↓
+필요한 경우 Image Build
+↓
+FastAPI Container 실행
+↓
+/health 상태 확인
+↓
+FastAPI 정상 동작 검증
+```
 
 ※  실제 운영 환경에서 사용 시에는 이미 구성이 완료된 이미지를 Registry를 통해 Pull 하여 사용하는 방식을 사용하는 것이 낫다. Application 소스까지 Jinja2 Template으로 관리하면 실제 애플리케이션 코드와 Ansible Template을 이중으로 관리해야 하므로 관리 복잡도가 증가하기 때문이다.
 
@@ -587,8 +1136,24 @@ Nginx 기반 WEB 서버와 Reverse Proxy 구성을 위한 Role로 web 그룹의 
 
 **\[ nginx\_proxy Role 동작 방식\]**
 
-| web↓WEB 변수 및 WAS 서버 정보 검증↓WAS 서버의 private\_ip 및 Port 확인↓Template 사용Nginx Reverse Proxy 설정 파일 생성↓Nginx Container 실행↓Template 변경 시 Container 재생성↓WEB → WAS 요청 전달 확인↓FastAPI 응답 검증 |
-| :---- |
+```text
+web
+↓
+WEB 변수 및 WAS 서버 정보 검증
+↓
+WAS 서버의 private_ip 및 Port 확인
+↓
+Template 사용
+Nginx Reverse Proxy 설정 파일 생성
+↓
+Nginx Container 실행
+↓
+Template 변경 시 Container 재생성
+↓
+WEB → WAS 요청 전달 확인
+↓
+FastAPI 응답 검증
+```
 
 ## 5.8 실제 구성 결과
 
