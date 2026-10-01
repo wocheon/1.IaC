@@ -1,0 +1,19 @@
+* text=auto
+
+# Cross-platform scripts and infrastructure files must use LF.
+*.sh      text eol=lf
+*.tf      text eol=lf
+*.tfvars  text eol=lf
+*.tfvars.example text eol=lf
+*.hcl     text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.j2      text eol=lf
+
+# Binary assets must never receive line-ending conversion.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.tar     binary
+*.gz      binary

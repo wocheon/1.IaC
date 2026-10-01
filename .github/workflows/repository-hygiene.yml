@@ -1,0 +1,34 @@
+name: Repository hygiene
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  repository-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject generated and sensitive files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          forbidden="$({
+            git ls-files '*.tfstate' '*.tfstate.*' '*.tfplan' '*.tfvars'
+            git ls-files | grep -E '(^|/)(log|logs)/(token|k8s_token_)' || true
+          } | sort -u)"
+
+          if [[ -n "$forbidden" ]]; then
+            printf 'Do not track generated or sensitive files:\n%s\n' "$forbidden"
+            exit 1
+          fi
+
+      - name: Check shell script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' script; do
+            bash -n "$script"
+          done < <(git ls-files -z '*.sh')

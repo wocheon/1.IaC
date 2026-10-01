@@ -1,10 +1,44 @@
-# 편집 임시파일 제외
+# Editor and OS files
 *.swp
-# 워드 문서 제외
 *.docx
-# Agents.md 제외
+.DS_Store
+Thumbs.db
+
+# Local Codex files
 AGENTS.md
-# Codex Agent 용 디렉토리 제외
 .agents/
 .codex/
-codex-goals/*
+codex-goals/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# Terraform runtime files
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ansible runtime files
+**/.ansible/
+*.retry
+**/log/
+**/logs/*
+!**/logs/.gitkeep
+
+# Packer runtime files
+packer_cache/
+output-*/
