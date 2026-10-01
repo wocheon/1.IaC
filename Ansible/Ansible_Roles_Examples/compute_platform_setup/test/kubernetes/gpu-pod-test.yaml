@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nvidia-gpu-test
+spec:
+  restartPolicy: Always
+  containers:
+    - name: nvidia-smi
+      image: nvidia/cuda:12.6.3-base-ubuntu24.04
+      command:
+        - /bin/bash
+        - -c
+        - |
+          echo "# Kubernetes GPU Pod"
+          echo "- node=${NODE_NAME}"
+          nvidia-smi
+          echo "GPU 1개를 할당한 상태로 Pod를 유지합니다."
+          exec sleep infinity
+      env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      resources:
+        limits:
+          nvidia.com/gpu: 1

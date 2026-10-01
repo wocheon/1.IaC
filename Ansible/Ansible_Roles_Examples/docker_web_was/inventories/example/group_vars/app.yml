@@ -1,0 +1,8 @@
+---
+fastapi_image: "fastapi-demo:2.0"
+fastapi_container_name: "app-fastapi"
+fastapi_build_dir: "/opt/fastapi-app"
+fastapi_host_port: "{{ application_port }}"
+
+fastapi_title: "Ansible FastAPI Example"
+fastapi_message: "{{ application_expected_message }}"

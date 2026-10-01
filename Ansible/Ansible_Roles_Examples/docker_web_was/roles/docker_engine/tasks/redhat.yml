@@ -1,0 +1,122 @@
+---
+- name: Validate RedHat-family distribution repository mapping
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in docker_engine_rpm_repo_os_map
+    fail_msg: >-
+      {{ ansible_distribution }} has no Docker repository mapping.
+      Add an explicit entry to docker_engine_rpm_repo_os_map.
+
+- name: Set Docker RPM repository distribution
+  ansible.builtin.set_fact:
+    docker_engine_rpm_repo_os: >-
+      {{ docker_engine_rpm_repo_os_map[ansible_distribution] }}
+
+- name: Remove conflicting Docker packages on RedHat-family systems
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+      - podman
+      - runc
+    state: absent
+  when: docker_engine_remove_conflicting_packages | bool
+
+- name: Install DNF repository and community.docker prerequisites
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+      - python3-requests
+    state: present
+
+- name: Configure Docker RPM repository
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "https://download.docker.com/linux/{{ docker_engine_rpm_repo_os }}/$releasever/$basearch/{{ docker_engine_repo_channel }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "https://download.docker.com/linux/{{ docker_engine_rpm_repo_os }}/gpg"
+
+- name: Refresh DNF repository metadata
+  ansible.builtin.dnf:
+    update_cache: true
+
+- name: Read available Docker Engine RPM versions
+  ansible.builtin.shell: >-
+    set -o pipefail &&
+    dnf list docker-ce --showduplicates --quiet |
+    awk '$1 ~ /^docker-ce\./ {print $2}'
+  args:
+    executable: /bin/bash
+  register: docker_engine_rpm_available_versions
+  changed_when: false
+
+- name: Fail when Docker Engine RPM repository has no packages
+  ansible.builtin.fail:
+    msg: >-
+      No docker-ce packages were found for distribution={{ ansible_distribution }},
+      release={{ ansible_distribution_major_version }},
+      architecture={{ ansible_architecture }}.
+      Check the docker-ce-stable repository and run dnf list docker-ce --showduplicates.
+  when: docker_engine_rpm_available_versions.stdout_lines | length == 0
+
+- name: Select requested Docker Engine RPM version
+  ansible.builtin.set_fact:
+    docker_engine_rpm_version: >-
+      {{
+        docker_engine_rpm_available_versions.stdout_lines
+        | select('search', docker_engine_version | regex_escape)
+        | first
+        | default('')
+      }}
+  when: docker_engine_version | lower != "latest"
+
+- name: Fail when requested Docker Engine RPM version is unavailable
+  ansible.builtin.fail:
+    msg: >-
+      Docker Engine {{ docker_engine_version }} is unavailable for
+      {{ ansible_distribution }} {{ ansible_distribution_major_version }}
+      ({{ ansible_architecture }}).
+      Available versions include:
+      {{ docker_engine_rpm_available_versions.stdout_lines[:10] | join(', ') }}.
+      Set docker_engine_version to one of these versions or to "latest".
+  when:
+    - docker_engine_version | lower != "latest"
+    - docker_engine_rpm_version | default('') | length == 0
+    - not docker_engine_install_latest_when_version_unavailable | bool
+
+- name: Install requested Docker Engine RPM version
+  ansible.builtin.dnf:
+    name:
+      - "docker-ce-{{ docker_engine_rpm_version }}"
+      - "docker-ce-cli-{{ docker_engine_rpm_version }}"
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when:
+    - docker_engine_version | lower != "latest"
+    - docker_engine_rpm_version | default('') | length > 0
+
+- name: Install latest Docker Engine RPM packages
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+  when: >-
+    docker_engine_version | lower == "latest" or
+    (
+      docker_engine_rpm_version | default('') | length == 0 and
+      docker_engine_install_latest_when_version_unavailable | bool
+    )

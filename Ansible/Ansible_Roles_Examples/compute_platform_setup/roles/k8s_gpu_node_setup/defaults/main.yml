@@ -1,0 +1,11 @@
+---
+kubernetes_gpu_install_device_plugin: true
+kubernetes_gpu_device_plugin_version: v0.17.1
+kubernetes_gpu_device_plugin_path: /etc/kubernetes/nvidia-device-plugin.yaml
+kubernetes_gpu_wait_timeout: 180
+gpu_install_driver: true
+gpu_install_nvidia_container_toolkit: true
+kubernetes_gpu_driver_managed: false
+
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true

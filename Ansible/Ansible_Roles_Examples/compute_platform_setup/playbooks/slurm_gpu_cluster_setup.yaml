@@ -1,0 +1,70 @@
+---
+- name: "Slurm GPU cluster 노드 facts 수집"
+  hosts: slurm_cluster
+  become: true
+  gather_facts: true
+  tags: [slurm, slurm-gpu]
+  tasks:
+    - name: "Slurm cluster facts 준비 완료"
+      ansible.builtin.meta: noop
+
+- name: "Slurm GPU compute 연결"
+  hosts: slurm_gpu_compute
+  become: true
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  tags: [slurm, slurm-gpu]
+  roles:
+    - role: slurm_gpu_cluster_setup
+      when: slurm_gpu_enabled | default(true) | bool
+
+- name: "Slurm controller GPU 자원 반영"
+  hosts: slurm_controllers
+  become: true
+  gather_facts: false
+  serial: 1
+  tags: [slurm, slurm-gpu]
+  tasks:
+    - name: "controller slurm.conf 갱신"
+      ansible.builtin.include_role:
+        name: slurm_common
+        tasks_from: configure
+      vars:
+        slurm_common_node_role: controller
+
+    - name: "Accounting controller 설정 변경 반영"
+      ansible.builtin.systemd:
+        name: slurmctld
+        state: restarted
+      when:
+        - slurm_accounting_enabled | bool
+        - slurm_restart_services | bool
+        - _slurm_config_template.changed | default(false)
+
+- name: "Slurm compute GPU 자원 반영"
+  hosts: slurm_compute
+  become: true
+  gather_facts: false
+  tags: [slurm, slurm-gpu]
+  tasks:
+    - name: "compute slurm.conf 갱신"
+      ansible.builtin.include_role:
+        name: slurm_common
+        tasks_from: configure
+      vars:
+        slurm_common_node_role: compute
+
+    - name: "slurm.conf handler 실행"
+      ansible.builtin.meta: flush_handlers
+
+    - name: "GPU node 설정 변경 반영"
+      ansible.builtin.systemd:
+        name: slurmd
+        state: restarted
+      when:
+        - slurm_restart_services | bool
+        - not (_slurm_config_template.changed | default(false))
+        - >-
+          (_slurm_gpu_gres_config.changed | default(false)) or
+          (_slurm_gpu_cgroup_config.changed | default(false))

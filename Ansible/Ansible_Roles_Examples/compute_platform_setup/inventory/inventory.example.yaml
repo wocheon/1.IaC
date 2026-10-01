@@ -1,0 +1,51 @@
+---
+all:
+  children:
+    kubernetes_cluster:
+      children:
+        # k8s_cluster_setup.yaml 대상
+        kubernetes_control_plane:
+          hosts:
+            k8s-cp-01:
+              ansible_host: 10.1.1.40
+        kubernetes_workers:
+          hosts:
+            k8s-worker-01:
+              ansible_host: 10.1.1.42
+            k8s-gpu-worker-01:
+              ansible_host: 10.1.1.41
+        # 두 GPU setup playbook 대상. kubernetes_workers에도 같은 hostname으로 등록한다.
+        kubernetes_gpu_workers:
+          hosts:
+            k8s-gpu-worker-01:
+
+    slurm_cluster:
+      children:
+        # slurm_cluster_setup.yaml 대상
+        slurm_controllers:
+          hosts:
+            slurm-controller-01:
+              ansible_host: 192.0.2.20
+        slurm_compute:
+          hosts:
+            slurm-compute-01:
+              ansible_host: 192.0.2.21
+            slurm-compute-02:
+              ansible_host: 192.0.2.22
+        # 두 GPU setup playbook 대상. slurm_compute에도 같은 hostname으로 등록한다.
+        slurm_gpu_compute:
+          hosts:
+            slurm-compute-02:
+              slurm_gpu_type: t4
+              slurm_gpu_count: 1
+              # 배포판 Slurm의 NVML plugin 유무와 무관하게 device를 명시한다.
+              slurm_gres_autodetect: "off"
+
+    gpu_standalone_nodes:
+      hosts:
+        gpu-vm-01:
+          ansible_host: 192.0.2.30
+    gpu_docker_nodes:
+      hosts:
+        gpu-docker-01:
+          ansible_host: 192.0.2.40

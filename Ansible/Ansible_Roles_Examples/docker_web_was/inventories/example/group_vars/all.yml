@@ -1,0 +1,9 @@
+---
+# Shared application contract used by both APP and WEB roles.
+application_port: 8000
+application_expected_message: "Nginx-FastAPI connection is working"
+
+# Environment-specific Docker storage paths.
+docker_engine_data_root: "/data/docker"
+containerd_root: "/data/containerd"
+containerd_state: "/run/containerd"

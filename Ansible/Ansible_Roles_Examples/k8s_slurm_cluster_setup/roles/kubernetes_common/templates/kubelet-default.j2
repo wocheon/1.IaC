@@ -1,3 +1,0 @@
-# Ansible managed - kubernetes_common
-KUBELET_EXTRA_ARGS={% if kubernetes_node_ip | default('') | length > 0 %}--node-ip={{ kubernetes_node_ip }}{% endif %}
-

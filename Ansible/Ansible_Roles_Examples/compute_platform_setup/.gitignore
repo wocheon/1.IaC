@@ -1,0 +1,5 @@
+inventory/inventory.yaml
+*.retry
+.ansible/
+logs/*
+!logs/.gitkeep

@@ -1,0 +1,81 @@
+### GCP Project&Region ###
+project       = "example-project-id"
+region        = "us-central1"
+zone          = "us-central1-a"
+
+### VM General Configurations ###
+vm_name = "example-app-1"
+machine_type  = "e2-small"
+vm_status = "RUNNING"
+auto_restart = true
+
+vm_labels = {
+  type  = "gcevm"
+  usage = "test-vm"
+  user  = "example-user"  
+}
+
+on_host_maintenance = "MIGRATE"
+
+
+### gpu configurations ###
+use_gpu_accelerator     = false
+#gpu_type                = "nvidia-tesla-t4"
+#gpu_cnt                 = 1
+
+
+### Boot_disk Configurations ###
+boot_disk_image = "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
+#boot_disk_image = null 
+#boot_disk_snapshot = "instance-20250707-070233-snapshot"
+boot_disk_snapshot = null
+
+boot_disk_size = 50	#number
+boot_disk_type = "pd-standard"
+boot_disk_auto_delete = true
+
+boot_disk_labels = {
+   type = "gce-boot-disk"
+   user = "example-user"
+}
+
+### additional_disk Configurations ###
+enable_additional_disks = false
+
+#new_disk_name = "gce-additional-disk-01"
+#new_disk_size = 30      #number
+#new_disk_type = "pd-standard"
+#new_disk_zone = "us-central1-a"
+#
+#new_disk_labels = {
+#   type = "gce-addtional-disk"
+#   user = "example-user"
+#}
+
+### Network Configurations ###
+
+network = "example-vpc"
+subnetwork = "example-subnet"
+internal_ip = "192.0.2.20"
+
+use_external_ip = true
+external_ip_tier = "PREMIUME"
+
+network_tags = [
+	"test-vm",
+	"terraform-test"
+]
+
+### Service Scpoes List ### 
+
+service_account = "terraform@example-project-id.iam.gserviceaccount.com"
+
+#service_scope = "default"
+service_scope = "selected"
+
+service_scope_list = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/compute",
+  "https://www.googleapis.com/auth/devstorage.full_control",
+  "https://www.googleapis.com/auth/cloud-platform" 
+]

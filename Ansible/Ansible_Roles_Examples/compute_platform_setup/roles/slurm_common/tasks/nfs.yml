@@ -1,0 +1,95 @@
+---
+- name: "NFS 디렉토리 사용자 정보 조회"
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ slurm_test_user }}"
+
+- name: "Slurm NFS 설정 검증"
+  ansible.builtin.assert:
+    that:
+      - slurm_nfs_source is string
+      - "':' in slurm_nfs_source"
+      - slurm_nfs_dest is match('^/')
+      - slurm_scripts_dir == slurm_nfs_dest ~ '/scripts'
+      - slurm_outputs_dir == slurm_nfs_dest ~ '/outputs'
+    fail_msg: >-
+      slurm_nfs_source는 server:/export 형식이어야 하며 scripts와 outputs는
+      slurm_nfs_dest 바로 아래의 디렉토리여야 합니다.
+    quiet: true
+
+- name: "NFS client 패키지 설치"
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Slurm NFS mount 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ slurm_nfs_dest }}"
+    state: directory
+    owner: "{{ slurm_test_user }}"
+    group: "{{ getent_passwd[slurm_test_user][2] }}"
+    mode: "0755"
+
+- name: "현재 Slurm NFS mount 조회"
+  ansible.builtin.command:
+    argv:
+      - findmnt
+      - --noheadings
+      - --output
+      - SOURCE
+      - --mountpoint
+      - "{{ slurm_nfs_dest }}"
+  register: _slurm_nfs_mount
+  changed_when: false
+  failed_when: _slurm_nfs_mount.rc not in [0, 1]
+
+- name: "기존 Slurm NFS mount source 검증"
+  ansible.builtin.assert:
+    that:
+      - >-
+        _slurm_nfs_mount.rc != 0 or
+        _slurm_nfs_mount.stdout | trim == slurm_nfs_source
+    fail_msg: >-
+      {{ slurm_nfs_dest }}에 다른 filesystem
+      ({{ _slurm_nfs_mount.stdout | trim }})이 mount되어 있습니다.
+    quiet: true
+
+- name: "Slurm NFS fstab 항목 제거"
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^[^#]\\S+\\s+{{ slurm_nfs_dest | regex_escape }}\\s+"
+    state: absent
+    backup: true
+
+- name: "Slurm NFS mount"
+  ansible.builtin.command:
+    argv:
+      - mount
+      - --types
+      - "{{ slurm_nfs_fstype }}"
+      - --options
+      - "{{ slurm_nfs_mount_options }}"
+      - "{{ slurm_nfs_source }}"
+      - "{{ slurm_nfs_dest }}"
+  when: _slurm_nfs_mount.rc != 0
+
+- name: "Slurm NFS 디렉토리 소유권 설정"
+  ansible.builtin.file:
+    path: "{{ slurm_nfs_dest }}"
+    state: directory
+    owner: "{{ slurm_test_user }}"
+    group: "{{ getent_passwd[slurm_test_user][2] }}"
+    mode: "0755"
+
+- name: "Slurm NFS scripts와 outputs 디렉토리 생성"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ slurm_test_user }}"
+    group: "{{ getent_passwd[slurm_test_user][2] }}"
+    mode: "0755"
+  loop:
+    - "{{ slurm_scripts_dir }}"
+    - "{{ slurm_outputs_dir }}"

@@ -1,0 +1,70 @@
+### GCP Project&Region ###
+project = "example-project-id"
+region  = "us-central1"
+zone    = "us-central1-a"
+
+### VM General Configurations ###
+vm_name               = "cluster-node"
+control_plane_vm_name = "cluster-control-plane"
+machine_type          = "e2-medium"
+vm_status             = "RUNNING"
+auto_restart          = true
+
+vm_labels = {
+  type  = "gcevm"
+  usage = "test-vm"
+  user  = "example-user"
+}
+
+on_host_maintenance = "MIGRATE"
+
+### SSH Configurations ###
+# Defaults to the current local username and ~/.ssh/id_rsa.pub.
+# ssh_user            = "example-user"
+# ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+
+### GPU Configurations ###
+use_gpu_accelerator = false
+# gpu_type = "nvidia-tesla-t4"
+# gpu_cnt  = 1
+
+### Boot Disk Configurations ###
+boot_disk_image = "ubuntu-os-accelerator-images/ubuntu-accelerator-2404-amd64-with-nvidia-595"
+# boot_disk_image    = null
+# boot_disk_snapshot = "instance-20250707-070233-snapshot"
+boot_disk_snapshot = null
+
+boot_disk_size        = 50
+boot_disk_type        = "pd-standard"
+boot_disk_auto_delete = true
+
+boot_disk_labels = {
+  type = "gce-boot-disk"
+  user = "example-user"
+}
+
+### Additional Disk Configurations ###
+enable_additional_disks = false
+
+### Network Configurations ###
+network     = "example-vpc"
+subnetwork  = "example-subnet"
+internal_ip = "192.0.2.30"
+
+use_external_ip  = true
+external_ip_tier = "PREMIUM"
+
+network_tags = [
+  "test-vm",
+  "terraform-test",
+]
+
+### Service Scopes List ###
+service_account = "terraform@example-project-id.iam.gserviceaccount.com"
+service_scope   = "selected"
+
+service_scope_list = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/compute",
+  "https://www.googleapis.com/auth/devstorage.full_control",
+]

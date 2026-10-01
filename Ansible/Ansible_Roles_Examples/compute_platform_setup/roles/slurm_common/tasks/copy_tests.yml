@@ -1,0 +1,33 @@
+---
+- name: "Slurm 테스트 사용자 정보 조회"
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ slurm_test_user }}"
+
+- name: "기존 로컬 Slurm 테스트 디렉토리 제거"
+  ansible.builtin.file:
+    path: "{{ slurm_test_home }}/slurm-tests"
+    state: absent
+
+- name: "사용하지 않는 기존 Slurm 테스트 스크립트 제거"
+  ansible.builtin.file:
+    path: "{{ slurm_scripts_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - run_slurm_test.sh
+    - slurm_sbatch_job.sh
+  when: inventory_hostname == groups[slurm_controller_group] | first
+
+- name: "Slurm 테스트 파일 복사"
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ slurm_scripts_dir }}/{{ item | basename }}"
+    owner: "{{ slurm_test_user }}"
+    group: "{{ getent_passwd[slurm_test_user][2] }}"
+    mode: "0755"
+  loop: >-
+    {{ query('ansible.builtin.fileglob', role_path + '/../../test/slurm/*.sh') +
+       query('ansible.builtin.fileglob', role_path + '/../../test/slurm/*.py') }}
+  loop_control:
+    label: "{{ item | basename }}"
+  when: inventory_hostname == groups[slurm_controller_group] | first

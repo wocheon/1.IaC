@@ -1,0 +1,29 @@
+---
+- name: "Kubernetes 관리자 사용자 설정 검증"
+  ansible.builtin.assert:
+    that:
+      - kubernetes_admin_user is match('^[a-z_][a-z0-9_-]*[$]?$')
+      - kubernetes_admin_uid | int > 0
+      - kubernetes_admin_gid | int > 0
+      - kubernetes_admin_home is match('^/')
+      - kubernetes_admin_shell is match('^/')
+    fail_msg: >-
+      kubernetes_admin_user, kubernetes_admin_uid/gid,
+      kubernetes_admin_home/shell 설정을 확인하세요.
+    quiet: true
+
+- name: "Kubernetes 관리자 그룹 생성"
+  ansible.builtin.group:
+    name: "{{ kubernetes_admin_user }}"
+    gid: "{{ kubernetes_admin_gid }}"
+    state: present
+
+- name: "Kubernetes 관리자 사용자 생성"
+  ansible.builtin.user:
+    name: "{{ kubernetes_admin_user }}"
+    uid: "{{ kubernetes_admin_uid }}"
+    group: "{{ kubernetes_admin_user }}"
+    home: "{{ kubernetes_admin_home }}"
+    shell: "{{ kubernetes_admin_shell }}"
+    create_home: true
+    state: present

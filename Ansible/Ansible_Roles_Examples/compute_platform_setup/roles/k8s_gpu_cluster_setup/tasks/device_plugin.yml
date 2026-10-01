@@ -1,0 +1,86 @@
+---
+- name: "GPU worker 현재 라벨 조회"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig=/etc/kubernetes/admin.conf
+      - get
+      - node
+      - "{{ hostvars[item].kubernetes_node_name | default((hostvars[item].ansible_nodename | default(item)).split('.')[0]) }}"
+      - -o
+      - json
+  loop: "{{ groups['kubernetes_gpu_workers'] }}"
+  register: _gpu_worker_nodes
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: "GPU worker에 device plugin 선택 라벨 적용"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig=/etc/kubernetes/admin.conf
+      - label
+      - node
+      - "{{ (item.stdout | from_json).metadata.name }}"
+      - compute-platform/gpu=true
+      - --overwrite
+  loop: "{{ _gpu_worker_nodes.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}"
+  register: _gpu_node_label
+  changed_when: _gpu_node_label.rc == 0
+  when:
+    - not ansible_check_mode
+    - (item.stdout | from_json).metadata.labels.get('compute-platform/gpu', '') != 'true'
+
+- name: "NVIDIA device plugin manifest 생성"
+  ansible.builtin.template:
+    src: device-plugin.yaml.j2
+    dest: "{{ kubernetes_gpu_device_plugin_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "NVIDIA device plugin 적용"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig=/etc/kubernetes/admin.conf
+      - apply
+      - -f
+      - "{{ kubernetes_gpu_device_plugin_path }}"
+  register: _gpu_plugin_apply
+  changed_when: "'created' in _gpu_plugin_apply.stdout or 'configured' in _gpu_plugin_apply.stdout"
+  when: not ansible_check_mode
+
+- name: "NVIDIA device plugin rollout 확인"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig=/etc/kubernetes/admin.conf
+      - rollout
+      - status
+      - daemonset/nvidia-device-plugin-daemonset
+      - --namespace=kube-system
+      - "--timeout={{ kubernetes_gpu_wait_timeout }}s"
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: "GPU worker의 GPU 리소스 등록 확인"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig=/etc/kubernetes/admin.conf
+      - get
+      - node
+      - "{{ hostvars[item].kubernetes_node_name | default((hostvars[item].ansible_nodename | default(item)).split('.')[0]) }}"
+      - -o
+      - json
+  loop: "{{ groups['kubernetes_gpu_workers'] }}"
+  register: _gpu_node_resources
+  changed_when: false
+  retries: 12
+  delay: 5
+  until: >-
+    (_gpu_node_resources.stdout | from_json).status.allocatable.get('nvidia.com/gpu', '0') | int > 0
+  when: not ansible_check_mode

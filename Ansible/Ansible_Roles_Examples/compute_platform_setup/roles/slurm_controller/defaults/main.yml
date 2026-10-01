@@ -1,0 +1,11 @@
+---
+slurm_restart_services: true
+slurm_accounting_enabled: false
+slurm_accounting_packages:
+  - mariadb-server
+  - mariadb-client
+  - slurmdbd
+slurm_accounting_db_name: slurm_acct_db
+slurm_accounting_db_user: slurm
+slurmdbd_config_path: /etc/slurm/slurmdbd.conf
+slurmdbd_log_path: /var/log/slurm/slurmdbd.log

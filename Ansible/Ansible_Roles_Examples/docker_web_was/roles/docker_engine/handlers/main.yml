@@ -1,0 +1,12 @@
+---
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Restart Docker Engine
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+    enabled: true

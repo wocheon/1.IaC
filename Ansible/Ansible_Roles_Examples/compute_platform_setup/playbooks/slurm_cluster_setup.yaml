@@ -1,0 +1,67 @@
+---
+- name: "Slurm 작업 사용자 준비 및 노드 facts 수집"
+  hosts: slurm_cluster
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "Slurm 작업 사용자 설정 검증"
+      ansible.builtin.assert:
+        that:
+          - slurm_test_user is match('^[a-z_][a-z0-9_-]*[$]?$')
+          - slurm_test_uid | int > 0
+          - slurm_test_gid | int > 0
+          - slurm_test_home is match('^/')
+          - slurm_test_shell is match('^/')
+        fail_msg: >-
+          slurm_test_user, slurm_test_uid/gid, slurm_test_home/shell 설정을 확인하세요.
+        quiet: true
+      when: slurm_manage_test_user | bool
+
+    - name: "Slurm 작업 그룹 생성"
+      ansible.builtin.group:
+        name: "{{ slurm_test_user }}"
+        gid: "{{ slurm_test_gid }}"
+        state: present
+      when: slurm_manage_test_user | bool
+
+    - name: "Slurm 작업 사용자 생성"
+      ansible.builtin.user:
+        name: "{{ slurm_test_user }}"
+        uid: "{{ slurm_test_uid }}"
+        group: "{{ slurm_test_user }}"
+        home: "{{ slurm_test_home }}"
+        shell: "{{ slurm_test_shell }}"
+        create_home: true
+        state: present
+      when: slurm_manage_test_user | bool
+
+    - name: "Slurm 테스트 사용자 정보 수집"
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ slurm_test_user }}"
+
+    - name: "Slurm 테스트 사용자 UID/GID 기록"
+      ansible.builtin.set_fact:
+        _slurm_test_uid: "{{ getent_passwd[slurm_test_user][1] }}"
+        _slurm_test_gid: "{{ getent_passwd[slurm_test_user][2] }}"
+        _slurm_test_home: "{{ getent_passwd[slurm_test_user][4] }}"
+  tags: [slurm]
+
+- name: "Slurm controller 구성"
+  hosts: slurm_controllers
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [slurm]
+  roles:
+    - role: slurm_controller
+      tags: [slurm, slurm-controller]
+
+- name: "Slurm compute node 구성"
+  hosts: slurm_compute
+  become: true
+  gather_facts: true
+  tags: [slurm]
+  roles:
+    - role: slurm_compute
+      tags: [slurm, slurm-compute]

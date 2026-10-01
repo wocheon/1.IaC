@@ -1,0 +1,20 @@
+---
+- name: "Kubernetes control-plane 구성"
+  hosts: kubernetes_control_plane
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [k8s, kubernetes]
+  roles:
+    - role: kubernetes_control_plane
+      tags: [k8s, kubernetes, k8s-control-plane, kubernetes-control-plane]
+
+- name: "Kubernetes worker 구성"
+  hosts: kubernetes_workers
+  become: true
+  gather_facts: true
+  serial: "{{ kubernetes_worker_serial | default('100%') }}"
+  tags: [k8s, kubernetes]
+  roles:
+    - role: kubernetes_worker
+      tags: [k8s, kubernetes, k8s-worker, kubernetes-worker]

@@ -1,0 +1,11 @@
+---
+- name: "Kubernetes GPU worker 노드 준비"
+  hosts: kubernetes_gpu_workers
+  become: true
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+  tags: [k8s, kubernetes]
+  roles:
+    - role: k8s_gpu_node_setup
+      when: kubernetes_gpu_enabled | default(true) | bool

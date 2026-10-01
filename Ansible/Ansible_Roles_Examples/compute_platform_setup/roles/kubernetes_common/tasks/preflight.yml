@@ -1,0 +1,32 @@
+---
+- name: "지원 운영체제 및 아키텍처 검증"
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version is version('22.04', '>=')
+      - ansible_architecture in ['x86_64', 'aarch64']
+      - kubernetes_repository_minor is match('^[0-9]+\.[0-9]+$')
+      - kubernetes_repository_minor is version('1.31', '>=')
+      - kubernetes_node_name is match('^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$')
+    fail_msg: >-
+      kubernetes_common은 Ubuntu 22.04/24.04의 x86_64 또는 aarch64를 지원합니다.
+      kubeadm v1beta4 설정을 위해 kubernetes_repository_minor는 1.31 이상의
+      minor 형식(예: 1.36)이어야 하며 kubernetes_node_name은 유효한 노드 이름이어야 합니다.
+    quiet: true
+
+- name: "control-plane 그룹 존재 검증"
+  ansible.builtin.assert:
+    that:
+      - groups['kubernetes_control_plane'] | default([]) | length > 0
+    fail_msg: "Inventory에 kubernetes_control_plane 호스트가 하나 이상 필요합니다."
+    quiet: true
+
+- name: "다중 control-plane endpoint 검증"
+  ansible.builtin.assert:
+    that:
+      - kubernetes_control_plane_endpoint | default('') | length > 0
+    fail_msg: >-
+      control-plane이 여러 대이면 load balancer 또는 stable DNS를
+      kubernetes_control_plane_endpoint에 지정해야 합니다.
+    quiet: true
+  when: groups['kubernetes_control_plane'] | length > 1

@@ -1,0 +1,25 @@
+---
+- name: "Slurm controller 공통 구성"
+  ansible.builtin.include_role:
+    name: slurm_common
+    public: true
+  vars:
+    slurm_common_node_role: controller
+
+- name: "Slurm accounting 구성"
+  ansible.builtin.include_tasks: accounting.yml
+  when: slurm_accounting_enabled | bool
+
+- name: "slurmctld 서비스 활성화"
+  ansible.builtin.systemd:
+    name: slurmctld
+    enabled: true
+    state: "{{ 'restarted' if (slurm_accounting_enabled | bool and slurm_restart_services | bool and _slurm_config_template.changed | default(false)) else 'started' }}"
+
+- name: "Slurm controller 응답 검증"
+  ansible.builtin.command: scontrol ping
+  register: _slurm_controller_ping
+  changed_when: false
+  retries: 10
+  delay: 3
+  until: "'UP' in _slurm_controller_ping.stdout"

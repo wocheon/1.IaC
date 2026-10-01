@@ -1,0 +1,83 @@
+---
+- name: Validate FastAPI role inputs
+  ansible.builtin.assert:
+    that:
+      - fastapi_build_dir is match('^/')
+      - fastapi_image | length > 0
+      - fastapi_container_name | length > 0
+      - fastapi_host_port | int > 0
+      - fastapi_container_port | int > 0
+      - fastapi_published_ports | length > 0
+    fail_msg: "FastAPI role variables are invalid."
+
+- name: Create FastAPI application source directory
+  ansible.builtin.file:
+    path: "{{ fastapi_build_dir }}/app"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy FastAPI Docker build context
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ fastapi_build_dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - src: Dockerfile.j2
+      dest: Dockerfile
+    - src: requirements.txt.j2
+      dest: requirements.txt
+    - src: main.py.j2
+      dest: app/main.py
+  loop_control:
+    label: "{{ item.dest }}"
+  register: fastapi_build_context
+
+- name: Inspect existing FastAPI image
+  community.docker.docker_image_info:
+    name: "{{ fastapi_image }}"
+  register: fastapi_image_info
+
+- name: Build FastAPI image when its context changed or image is absent
+  community.docker.docker_image:
+    name: "{{ fastapi_image }}"
+    source: build
+    build:
+      path: "{{ fastapi_build_dir }}"
+      pull: true
+    force_source: true
+    state: present
+  when:
+    - fastapi_build_context.changed or fastapi_image_info.images | length == 0
+  register: fastapi_image_build
+
+- name: Converge FastAPI container
+  community.docker.docker_container:
+    name: "{{ fastapi_container_name }}"
+    image: "{{ fastapi_image }}"
+    state: started
+    restart_policy: "{{ fastapi_restart_policy }}"
+    published_ports: "{{ fastapi_published_ports }}"
+    pull: never
+    recreate: "{{ fastapi_image_build.changed | default(false) }}"
+
+- name: Wait for FastAPI health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ fastapi_host_port }}/health"
+    return_content: true
+    status_code: 200
+  register: fastapi_health_response
+  retries: "{{ fastapi_health_retries }}"
+  delay: "{{ fastapi_health_delay }}"
+  until:
+    - fastapi_health_response.json.status | default('') == "ok"
+
+- name: Show FastAPI deployment result
+  ansible.builtin.debug:
+    msg:
+      - "Image: {{ fastapi_image }}"
+      - "Container: {{ fastapi_container_name }}"
+      - "Health status: {{ fastapi_health_response.json.status }}"

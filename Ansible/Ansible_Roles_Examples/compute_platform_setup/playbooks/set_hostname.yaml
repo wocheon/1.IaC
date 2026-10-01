@@ -1,0 +1,40 @@
+---
+- name: "연결 가능한 호스트 선별"
+  hosts: all
+  become: true
+  gather_facts: false
+  tags: [always, hostname]
+  tasks:
+    - name: "Ansible 연결 확인"
+      ansible.builtin.ping:
+      register: connection_check
+      failed_when: false
+      ignore_unreachable: true
+
+    - name: "연결 가능한 호스트 그룹 생성"
+      ansible.builtin.group_by:
+        key: reachable_hosts
+      when: connection_check.ping | default('') == 'pong'
+      changed_when: false
+
+- name: "GCE FQDN hostname을 VM 이름으로 정규화"
+  hosts: reachable_hosts
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [always, hostname]
+  vars:
+    vm_short_hostname: "{{ ansible_nodename.split('.')[0] }}"
+  tasks:
+    - name: "VM short hostname 검증"
+      ansible.builtin.assert:
+        that:
+          - vm_short_hostname is match('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
+          - vm_short_hostname | length <= 63
+        fail_msg: "유효하지 않은 VM short hostname입니다: {{ vm_short_hostname }}"
+        quiet: true
+
+    - name: "VM 이름을 persistent hostname으로 설정"
+      ansible.builtin.hostname:
+        name: "{{ vm_short_hostname }}"
+        use: systemd

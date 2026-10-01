@@ -1,0 +1,61 @@
+---
+- name: "Slurm GPU GRES 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - slurm_gres_autodetect in ['nvml', 'off']
+    fail_msg: "slurm_gres_autodetect는 nvml 또는 off여야 합니다."
+    quiet: true
+
+- name: "GPU 모델명 조회"
+  ansible.builtin.command:
+    cmd: nvidia-smi --query-gpu=name --format=csv,noheader
+  register: _gpu_slurm_smi
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "GPU 조회 성공 확인"
+  ansible.builtin.assert:
+    that:
+      - _gpu_slurm_smi.rc | default(1) == 0
+      - _gpu_slurm_smi.stdout_lines | default([]) | length > 0
+    fail_msg: >-
+      nvidia-smi로 GPU를 확인하지 못했습니다.
+      slurm_gpu_node_setup.yaml을 먼저 실행하고 필요한 경우 재부팅하세요.
+  when: not ansible_check_mode
+
+- name: "GPU 개수 / 타입 결정"
+  ansible.builtin.set_fact:
+    _gpu_slurm_count: >-
+      {{ slurm_gpu_count if (slurm_gpu_count | int) > 0
+         else (_gpu_slurm_smi.stdout_lines | default([]) | length) }}
+    _gpu_slurm_type: >-
+      {{ slurm_gpu_type if slurm_gpu_type | length > 0
+         else ((_gpu_slurm_smi.stdout_lines | default([]) | first | default(''))
+               | regex_replace('^NVIDIA\s+', '')
+               | regex_replace('[^A-Za-z0-9]+', '_')
+               | lower) }}
+
+- name: "AutoDetect=off 사용 시 GPU 감지 결과 검증"
+  ansible.builtin.assert:
+    that:
+      - (_gpu_slurm_count | int) > 0
+      - _gpu_slurm_type | length > 0
+    fail_msg: >-
+      slurm_gres_autodetect=off 이지만 GPU 개수/타입을 확인할 수 없습니다.
+      slurm_gpu_count 와 slurm_gpu_type 을 명시적으로 지정하세요.
+    quiet: true
+  when: slurm_gres_autodetect == 'off'
+
+- name: "Controller 등록용 GPU 자원 확인"
+  ansible.builtin.assert:
+    that:
+      - _gpu_slurm_count | int > 0
+      - _gpu_slurm_count | int <= _gpu_slurm_smi.stdout_lines | length
+      - slurm_gres | default('gpu:' ~ _gpu_slurm_type ~ ':' ~ _gpu_slurm_count) == 'gpu:' ~ _gpu_slurm_type ~ ':' ~ _gpu_slurm_count
+    fail_msg: "slurm_gpu_type/count와 기존 slurm_gres 또는 실제 GPU 수가 일치하지 않습니다."
+  when: not ansible_check_mode
+
+- name: "공유 slurm.conf의 노드 GPU 자원 기록"
+  ansible.builtin.set_fact:
+    _slurm_gpu_gres: "gpu:{{ _gpu_slurm_type }}:{{ _gpu_slurm_count }}"

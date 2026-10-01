@@ -1,0 +1,52 @@
+---
+slurm_common_node_role: compute
+slurm_controller_group: slurm_controllers
+slurm_compute_group: slurm_compute
+slurm_cluster_name: compute-cluster
+slurm_partition_name: compute
+slurm_default_partition: true
+slurm_munge_key_path: /etc/munge/munge.key
+slurm_config_path: /etc/slurm/slurm.conf
+slurm_state_save_location: /var/spool/slurmctld
+slurm_slurmd_spool_dir: /var/spool/slurmd
+slurm_log_dir: /var/log/slurm
+slurm_restart_services: true
+slurm_extra_config: ""
+slurm_proctrack_type: proctrack/linuxproc
+slurm_task_plugin: task/affinity
+slurm_gres_autodetect: nvml
+slurm_gpu_type: ""
+slurm_gpu_count: 0
+slurm_accounting_enabled: false
+slurm_accounting_host: >-
+  {{ hostvars[groups[slurm_controller_group] | first].ansible_host |
+     default(groups[slurm_controller_group] | first) }}
+slurm_accounting_port: 6819
+slurm_accounting_enforce: associations
+slurm_accounting_account: compute
+slurm_jobacct_gather_type: jobacct_gather/linux
+slurm_jobacct_gather_frequency: 30
+slurm_packages:
+  - munge
+  - slurm-wlm
+  - chrony
+slurm_config_owner: slurm
+slurm_config_group: slurm
+slurm_config_mode: "0644"
+
+# sbatch/srun 작업 파일을 NFS의 scripts 디렉토리에 배포한다.
+slurm_copy_test_files: true
+slurm_manage_test_user: true
+slurm_test_user: slurmuser
+slurm_test_uid: 2000
+slurm_test_gid: 2000
+slurm_test_home: /home/slurmuser
+slurm_test_shell: /bin/bash
+
+# 공유 작업 데이터용 NFS.
+slurm_nfs_source: ""
+slurm_nfs_dest: /mnt/slurm
+slurm_scripts_dir: "{{ slurm_nfs_dest }}/scripts"
+slurm_outputs_dir: "{{ slurm_nfs_dest }}/outputs"
+slurm_nfs_fstype: nfs
+slurm_nfs_mount_options: rw,hard,timeo=600,retrans=2

@@ -1,0 +1,32 @@
+---
+# Use "latest" for the portable example. Set a version such as "28.5.1" in
+# inventory group_vars when a distro-specific package build has been verified.
+docker_engine_version: "latest"
+docker_engine_install_latest_when_version_unavailable: false
+docker_engine_repo_channel: "stable"
+docker_engine_remove_conflicting_packages: true
+docker_engine_apt_lock_timeout: 900
+
+docker_engine_data_root: "/var/lib/docker"
+containerd_root: "/var/lib/containerd"
+containerd_state: "/run/containerd"
+
+docker_engine_log_max_size: "100m"
+docker_engine_log_max_file: "3"
+
+docker_engine_daemon_config:
+  data-root: "{{ docker_engine_data_root }}"
+  log-driver: "json-file"
+  log-opts:
+    max-size: "{{ docker_engine_log_max_size }}"
+    max-file: "{{ docker_engine_log_max_file }}"
+
+docker_engine_debian_distributions:
+  - Debian
+  - Ubuntu
+
+docker_engine_rpm_repo_os_map:
+  RedHat: "rhel"
+  CentOS: "centos"
+  Rocky: "centos"
+  AlmaLinux: "centos"

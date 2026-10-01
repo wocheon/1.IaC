@@ -1,0 +1,11 @@
+---
+kubernetes_gpu_install_device_plugin: true
+kubernetes_gpu_device_plugin_version: v0.17.1
+kubernetes_gpu_device_plugin_path: /etc/kubernetes/nvidia-device-plugin.yaml
+kubernetes_gpu_wait_timeout: 180
+kubernetes_set_nvidia_default_runtime: true
+kubernetes_container_runtime: containerd
+kubernetes_containerd_config_path: /etc/containerd/config.toml
+kubernetes_generate_containerd_config: true
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true

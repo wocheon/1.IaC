@@ -1,0 +1,57 @@
+---
+- name: "검증: containerd 유효 설정"
+  ansible.builtin.command:
+    argv:
+      - containerd
+      - --config
+      - "{{ kubernetes_containerd_config_path }}"
+      - config
+      - dump
+  register: _gpu_kubernetes_v_containerd
+  changed_when: false
+  check_mode: false
+
+- name: "검증: nvidia-container-cli info"
+  ansible.builtin.command:
+    cmd: nvidia-container-cli info
+  register: _gpu_kubernetes_v_nct
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: not (gpu_reboot_required | default(false) | bool)
+
+- name: "Kubernetes GPU runtime 검증 상태 판정"
+  ansible.builtin.set_fact:
+    _gpu_kubernetes_runtime_valid: >-
+      {{
+        'nvidia-container-runtime' in _gpu_kubernetes_v_containerd.stdout
+        and (not (kubernetes_set_nvidia_default_runtime | bool)
+             or 'default_runtime_name = "nvidia"' in _gpu_kubernetes_v_containerd.stdout
+             or "default_runtime_name = 'nvidia'" in _gpu_kubernetes_v_containerd.stdout)
+      }}
+    _gpu_kubernetes_toolkit_valid: >-
+      {{
+        (_gpu_kubernetes_v_nct.skipped | default(false))
+        or (_gpu_kubernetes_v_nct.rc | default(1)) == 0
+      }}
+
+- name: "Kubernetes GPU runtime 검증 실패 시 중단"
+  ansible.builtin.assert:
+    that:
+      - _gpu_kubernetes_runtime_valid | bool
+      - _gpu_kubernetes_toolkit_valid | bool
+    fail_msg: >-
+      Kubernetes GPU 환경 검증 실패.
+      containerd NVIDIA runtime={{ _gpu_kubernetes_runtime_valid }},
+      nvidia-container-cli={{ _gpu_kubernetes_toolkit_valid }}.
+    quiet: true
+  when: gpu_verify_fail_on_error | bool
+
+- name: "Kubernetes GPU runtime 검증 경고"
+  ansible.builtin.debug:
+    msg:
+      - "[검증 경고] containerd NVIDIA runtime={{ _gpu_kubernetes_runtime_valid }}"
+      - "[검증 경고] nvidia-container-cli={{ _gpu_kubernetes_toolkit_valid }}"
+  when:
+    - not (gpu_verify_fail_on_error | bool)
+    - not (_gpu_kubernetes_runtime_valid | bool) or not (_gpu_kubernetes_toolkit_valid | bool)

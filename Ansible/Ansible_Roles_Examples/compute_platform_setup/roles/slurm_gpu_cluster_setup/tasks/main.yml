@@ -1,0 +1,67 @@
+---
+# Slurm 설치 후 GPU 노드의 gres.conf를 만든다.
+
+- name: "Slurm GPU cluster 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname in groups.get('slurm_compute', [])
+      - inventory_hostname in groups.get('slurm_gpu_compute', [])
+    fail_msg: >-
+      GPU 노드는 slurm_compute와 slurm_gpu_compute 양쪽에 같은 hostname으로 등록해야 합니다.
+    quiet: true
+
+- name: "Slurm compute 준비 상태 확인"
+  ansible.builtin.command:
+    cmd: slurmd --version
+  register: _slurm_gpu_slurmd
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "Slurm cluster setup 선행 실행 확인"
+  ansible.builtin.assert:
+    that:
+      - _slurm_gpu_slurmd.rc == 0
+    fail_msg: >-
+      slurmd를 찾을 수 없습니다. slurm_gpu_node_setup.yaml과
+      slurm_cluster_setup.yaml을 먼저 실행하세요.
+    quiet: true
+
+- name: "Slurm GPU 자원 정보 수집"
+  ansible.builtin.include_role:
+    name: slurm_common
+    tasks_from: gpu_gres_facts
+
+- name: "Slurm 설정 디렉토리 확인"
+  ansible.builtin.file:
+    path: "{{ slurm_gres_config_path | dirname }}"
+    state: directory
+    owner: "{{ slurm_gpu_config_owner }}"
+    group: "{{ slurm_gpu_config_group }}"
+    mode: "0755"
+
+- name: "gres.conf 생성"
+  ansible.builtin.template:
+    src: gres.conf.j2
+    dest: "{{ slurm_gres_config_path }}"
+    owner: "{{ slurm_gpu_config_owner }}"
+    group: "{{ slurm_gpu_config_group }}"
+    mode: "{{ slurm_gpu_config_mode }}"
+    backup: true
+  when: slurm_manage_gres_conf | bool
+  register: _slurm_gpu_gres_config
+
+- name: "cgroup.conf 생성 (명시적으로 활성화한 경우에만)"
+  ansible.builtin.template:
+    src: cgroup.conf.j2
+    dest: "{{ slurm_cgroup_config_path }}"
+    owner: "{{ slurm_gpu_config_owner }}"
+    group: "{{ slurm_gpu_config_group }}"
+    mode: "{{ slurm_gpu_config_mode }}"
+    backup: true
+  when: slurm_manage_cgroup_conf | bool
+  register: _slurm_gpu_cgroup_config
+
+- name: "Slurm GPU 등록 정보"
+  ansible.builtin.debug:
+    msg: "공통 slurm.conf에 반영할 GPU: {{ _slurm_gpu_gres }}"

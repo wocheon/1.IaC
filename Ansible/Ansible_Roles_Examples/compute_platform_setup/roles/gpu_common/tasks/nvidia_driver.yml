@@ -1,0 +1,187 @@
+---
+# ==========================================================================
+# NVIDIA Driver 설치
+#
+# [DISRUPTIVE] 드라이버 설치/업그레이드는 커널 모듈을 교체하므로
+#              실행 중인 GPU workload 에 영향을 줄 수 있다.
+#              이 Role 은 절대 자동으로 reboot 하지 않는다.
+#              (gpu_allow_reboot=true 인 경우에만 재부팅)
+# ==========================================================================
+
+- name: "NVIDIA apt repository 등록"
+  ansible.builtin.include_tasks: nvidia_repo.yml
+  when:
+    - nvidia_driver_source == 'cuda_repo'
+    - not (_gpu_nvidia_repo_configured | default(false) | bool)
+
+- name: "자동 감지 도구 설치"
+  ansible.builtin.apt:
+    name: ubuntu-drivers-common
+    state: present
+  when: nvidia_driver_version | string | length == 0
+
+- name: "GPGPU 드라이버 후보 자동 감지"
+  ansible.builtin.command:
+    cmd: ubuntu-drivers list --gpgpu
+  register: _gpu_driver_list
+  changed_when: false
+  check_mode: false
+  when: nvidia_driver_version | string | length == 0
+
+- name: "자동 감지된 드라이버 후보 저장"
+  ansible.builtin.set_fact:
+    _gpu_driver_candidates: >-
+      {{ _gpu_driver_list.stdout
+         | regex_findall('(?m)^(nvidia-driver-[0-9]+(?:-[a-z]+)*)(?:,|\s|$)')
+         | unique | list }}
+  when: nvidia_driver_version | string | length == 0
+
+- name: "자동 감지 결과 검증"
+  ansible.builtin.assert:
+    that:
+      - _gpu_driver_candidates | length > 0
+    fail_msg: >-
+      ubuntu-drivers list --gpgpu 출력에서 설치 가능한 NVIDIA Driver를
+      찾지 못했습니다. apt 저장소와 GPU 감지 상태를 확인하세요.
+    quiet: true
+  when: nvidia_driver_version | string | length == 0
+
+- name: "자동 감지된 최신 드라이버 branch 결정"
+  ansible.builtin.set_fact:
+    _gpu_detected_driver_version: >-
+      {{ _gpu_driver_candidates
+         | map('regex_replace', '^nvidia-driver-([0-9]+).*$', '\1')
+         | map('int') | list | max }}
+  when: nvidia_driver_version | string | length == 0
+
+- name: "설치할 NVIDIA Driver 패키지 결정"
+  ansible.builtin.set_fact:
+    nvidia_driver_package: >-
+      {{ 'nvidia-driver-' ~ nvidia_driver_version ~ nvidia_driver_flavor
+         if nvidia_driver_version | string | length > 0
+         else (_gpu_driver_candidates
+               | select('match', '^nvidia-driver-' ~ (_gpu_detected_driver_version | string) ~ '(?:-|$)')
+               | list | first) }}
+
+- name: "드라이버 branch와 GCP 커널 모듈 패키지 결정"
+  ansible.builtin.set_fact:
+    _gpu_driver_branch_flavor: "{{ nvidia_driver_package | regex_replace('^nvidia-driver-', '') }}"
+    _gpu_gcp_kernel: "{{ ansible_facts['kernel'] is match('.*-gcp$') }}"
+
+- name: "설치 및 검증할 드라이버 패키지 목록 결정"
+  ansible.builtin.set_fact:
+    _gpu_driver_packages_to_install: >-
+      {{ [nvidia_driver_package,
+          'linux-modules-nvidia-' ~ _gpu_driver_branch_flavor ~ '-gcp',
+          'linux-modules-nvidia-' ~ _gpu_driver_branch_flavor ~ '-' ~ ansible_facts['kernel']]
+         if _gpu_gcp_kernel | bool
+         else [nvidia_driver_package] }}
+    _gpu_driver_packages_to_check: >-
+      {{ [nvidia_driver_package,
+          'linux-modules-nvidia-' ~ _gpu_driver_branch_flavor ~ '-gcp',
+          'linux-modules-nvidia-' ~ _gpu_driver_branch_flavor ~ '-' ~ ansible_facts['kernel']]
+         if _gpu_gcp_kernel | bool
+         else [nvidia_driver_package, 'linux-headers-' ~ ansible_facts['kernel']] }}
+
+- name: "현재 커널용 드라이버 패키지 가용성 확인"
+  ansible.builtin.command:
+    argv:
+      - apt-cache
+      - policy
+      - "{{ item }}"
+  loop: "{{ _gpu_driver_packages_to_check }}"
+  register: _gpu_driver_package_policy
+  changed_when: false
+  check_mode: false
+  environment:
+    LC_ALL: C
+
+- name: "현재 커널용 드라이버 패키지 가용성 검증"
+  ansible.builtin.assert:
+    that:
+      - item.stdout is regex('(?m)^  Candidate: (?!\\(none\\))\\S+')
+    fail_msg: >-
+      현재 커널 {{ ansible_facts['kernel'] }}용 {{ item.item }} 패키지를
+      활성화된 apt 저장소에서 찾을 수 없습니다.
+    quiet: true
+  loop: "{{ _gpu_driver_package_policy.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: "CUDA와 선택한 Driver 최소 호환성 검증"
+  ansible.builtin.assert:
+    that:
+      - >-
+        (_gpu_driver_branch_flavor | regex_search('^[0-9]+') | int) >=
+        (gpu_cuda_min_driver_branches[cuda_version.split('.')[0]] | int)
+    fail_msg: >-
+      CUDA {{ cuda_version }}에는 최소 Driver branch
+      {{ gpu_cuda_min_driver_branches[cuda_version.split('.')[0]] }}가 필요하지만
+      선택된 패키지는 {{ nvidia_driver_package }}입니다.
+    quiet: true
+  when:
+    - gpu_common_install_cuda | bool
+    - cuda_version.split('.')[0] in gpu_cuda_min_driver_branches
+
+- name: "DKMS용 커널 헤더 / 빌드 도구 설치"
+  ansible.builtin.apt:
+    name:
+      - "linux-headers-{{ ansible_facts['kernel'] }}"
+      - dkms
+      - build-essential
+    state: present
+  when: not (_gpu_gcp_kernel | bool)
+
+- name: "설치 전 드라이버 상태 확인"
+  ansible.builtin.command:
+    cmd: nvidia-smi --query-gpu=driver_version --format=csv,noheader
+  register: _gpu_smi_before
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "nouveau 드라이버 blacklist 설정"
+  ansible.builtin.template:
+    src: blacklist-nouveau.conf.j2
+    dest: /etc/modprobe.d/blacklist-nouveau.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: _gpu_nouveau_blacklist
+  when: nvidia_blacklist_nouveau | bool
+  notify: update initramfs
+
+- name: "NVIDIA Driver 패키지 설치 ({{ nvidia_driver_package }})"
+  ansible.builtin.apt:
+    name: "{{ _gpu_driver_packages_to_install }}"
+    state: present
+    install_recommends: true
+  register: _gpu_driver_install
+
+- name: "nvidia-persistenced 서비스 활성화"
+  ansible.builtin.systemd:
+    name: nvidia-persistenced
+    enabled: true
+    state: started
+  when:
+    - nvidia_enable_persistenced | bool
+    - not (_gpu_driver_install is changed)   # 방금 설치한 경우 reboot 전에는 기동되지 않을 수 있다
+  failed_when: false
+
+- name: "커널 모듈 로드 상태 확인"
+  ansible.builtin.command:
+    cmd: nvidia-smi --query-gpu=driver_version --format=csv,noheader
+  register: _gpu_smi_after
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "드라이버 적용을 위한 reboot 필요 여부 판정"
+  ansible.builtin.set_fact:
+    gpu_reboot_required: true
+  when: >-
+    (_gpu_driver_install is changed)
+    or (_gpu_nouveau_blacklist is changed)
+    or (_gpu_smi_after.rc != 0 and gpu_nvidia_device_present | bool)
+    or (_gpu_smi_before.rc == 0 and _gpu_smi_after.rc == 0
+        and _gpu_smi_before.stdout != _gpu_smi_after.stdout)

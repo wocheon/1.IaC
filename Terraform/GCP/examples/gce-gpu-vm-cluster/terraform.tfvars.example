@@ -1,0 +1,55 @@
+project = "YOUR_GCP_PROJECT_ID"
+region  = "asia-northeast3"
+
+control_plane_zone  = "asia-northeast3-a"
+gpu_worker_zone     = "asia-northeast3-b"
+non_gpu_worker_zone = "asia-northeast3-a"
+
+control_plane_vm_name  = "gcp-an3-a-gpu-cluster-control-plane"
+gpu_worker_vm_name     = "gcp-an3-b-gpu-cluster-node"
+non_gpu_worker_vm_name = "gcp-an3-a-gpu-cluster-cpu-node"
+
+control_plane_machine_type  = "e2-medium"
+gpu_worker_machine_type     = "n1-standard-4"
+gpu_worker_count            = 1
+non_gpu_worker_machine_type = "e2-medium"
+non_gpu_worker_count        = 1
+
+vm_labels = {
+  type  = "gce-gpu-cluster"
+  usage = "gpu-workload-test"
+  user  = "wocheon07"
+}
+
+boot_disk_size = 50
+boot_disk_type = "pd-standard"
+
+boot_disk_labels = {
+  type = "gce-gpu-cluster-boot-disk"
+  user = "wocheon07"
+}
+
+network                   = "test-vpc-1"
+subnetwork                = "test-vpc-sub-1"
+control_plane_internal_ip = "10.1.1.40"
+
+use_external_ip  = true
+external_ip_tier = "PREMIUM"
+
+network_tags = [
+  "test-vm",
+  "terraform-test",
+  "gpu-workload-test",
+]
+
+service_account = "487401709675-compute@developer.gserviceaccount.com"
+
+service_scope_list = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/compute",
+  "https://www.googleapis.com/auth/devstorage.full_control",
+]
+
+# Defaults to the current local username and ~/.ssh/id_rsa.pub.
+# ssh_user            = "wocheon07"
+# ssh_public_key_path = "~/.ssh/id_ed25519.pub"

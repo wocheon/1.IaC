@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-node-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-node-1
+  template:
+    metadata:
+      labels:
+        app: nginx-node-1
+    spec:
+      nodeSelector:
+        deploy-test: node-1
+      containers:
+        - name: nginx
+          image: nginx:1.29
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-node-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-node-2
+  template:
+    metadata:
+      labels:
+        app: nginx-node-2
+    spec:
+      nodeSelector:
+        deploy-test: node-2
+      containers:
+        - name: nginx
+          image: nginx:1.29
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-node-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-node-3
+  template:
+    metadata:
+      labels:
+        app: nginx-node-3
+    spec:
+      nodeSelector:
+        deploy-test: node-3
+      containers:
+        - name: nginx
+          image: nginx:1.29
+          ports:
+            - containerPort: 80

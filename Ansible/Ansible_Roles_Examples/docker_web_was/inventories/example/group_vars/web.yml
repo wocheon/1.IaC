@@ -1,0 +1,8 @@
+---
+nginx_image: "nginx:1.27"
+nginx_container_name: "web-nginx"
+nginx_host_port: 80
+nginx_backend_group: "app"
+
+nginx_published_ports:
+  - "{{ nginx_host_port }}:80"

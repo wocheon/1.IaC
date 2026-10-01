@@ -1,0 +1,31 @@
+---
+- name: "Kubernetes GPU worker runtime 연결"
+  hosts: kubernetes_gpu_workers
+  become: true
+  # 다음 control-plane play가 kubeadm 가입 때 사용한 실제 node name을 참조한다.
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+  tags: [k8s, kubernetes, k8s-gpu, kubernetes-gpu]
+  tasks:
+    - name: "GPU worker를 containerd에 연결"
+      ansible.builtin.include_role:
+        name: k8s_gpu_cluster_setup
+        tasks_from: runtime
+      when: kubernetes_gpu_enabled | default(true) | bool
+
+- name: "Kubernetes GPU device plugin 구성"
+  hosts: kubernetes_control_plane
+  become: true
+  gather_facts: false
+  tags: [k8s, kubernetes, k8s-gpu, kubernetes-gpu]
+  tasks:
+    - name: "최초 control-plane에서 GPU cluster 설정"
+      ansible.builtin.include_role:
+        name: k8s_gpu_cluster_setup
+        tasks_from: device_plugin
+      when:
+        - inventory_hostname == groups['kubernetes_control_plane'] | first
+        - groups.get('kubernetes_gpu_workers', []) | length > 0
+        - kubernetes_gpu_enabled | default(true) | bool
+        - kubernetes_gpu_install_device_plugin | default(true) | bool

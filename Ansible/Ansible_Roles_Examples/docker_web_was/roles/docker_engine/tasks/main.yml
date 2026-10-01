@@ -1,0 +1,66 @@
+---
+- name: Validate Docker Engine role inputs
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in ["Debian", "RedHat"]
+      - docker_engine_data_root is match('^/')
+      - containerd_root is match('^/')
+      - containerd_state is match('^/')
+      - docker_engine_version | length > 0
+    fail_msg: >-
+      Docker Engine supports Debian and RedHat OS families and requires
+      non-empty version and absolute storage paths.
+
+- name: Install Docker Engine on Debian-family systems
+  ansible.builtin.include_tasks: debian.yml
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker Engine on RedHat-family systems
+  ansible.builtin.include_tasks: redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Verify Python requests dependency for community.docker
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.python.executable }}"
+      - -c
+      - import requests
+  changed_when: false
+
+- name: Configure Docker Engine and containerd
+  ansible.builtin.include_tasks: configure.yml
+
+- name: Apply Docker Engine configuration handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure containerd is enabled and running
+  ansible.builtin.systemd:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Ensure Docker Engine is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Verify Docker Engine storage path
+  ansible.builtin.command: docker info
+  register: docker_engine_info
+  changed_when: false
+
+- name: Read configured containerd storage paths
+  ansible.builtin.command:
+    cmd: grep -E '^(root|state)\s*=' /etc/containerd/config.toml
+  register: containerd_storage_config
+  changed_when: false
+
+- name: Verify Docker Engine and containerd configuration result
+  ansible.builtin.assert:
+    that:
+      - "'Docker Root Dir: ' + docker_engine_data_root in docker_engine_info.stdout"
+      - "'root = \"' + containerd_root + '\"' in containerd_storage_config.stdout"
+      - "'state = \"' + containerd_state + '\"' in containerd_storage_config.stdout"
+    fail_msg: "Docker Engine or containerd storage configuration is incorrect."
+    success_msg: "Docker Engine and containerd storage configuration is valid."

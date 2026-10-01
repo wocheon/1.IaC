@@ -1,4 +1,0 @@
-inventory/inventory.yaml
-*.retry
-.ansible/
-

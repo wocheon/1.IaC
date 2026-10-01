@@ -1,0 +1,33 @@
+---
+- name: Install and configure Docker Engine
+  hosts: docker_targets
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+
+  roles:
+    - role: docker_engine
+      tags:
+        - docker
+
+- name: Deploy FastAPI application
+  hosts: app
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+
+  roles:
+    - role: fastapi_app
+      tags:
+        - app
+
+- name: Deploy Nginx reverse proxy
+  hosts: web
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+
+  roles:
+    - role: nginx_proxy
+      tags:
+        - web

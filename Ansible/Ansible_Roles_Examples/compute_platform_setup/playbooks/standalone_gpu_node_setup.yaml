@@ -1,0 +1,8 @@
+---
+- name: "Standalone GPU 노드 준비"
+  hosts: gpu_standalone_nodes
+  become: true
+  gather_facts: true
+  tags: [standalone]
+  roles:
+    - gpu_standalone

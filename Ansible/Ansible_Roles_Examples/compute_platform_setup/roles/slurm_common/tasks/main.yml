@@ -1,0 +1,23 @@
+---
+- name: "Slurm 사전 점검"
+  ansible.builtin.include_tasks: preflight.yml
+
+- name: "Slurm 패키지 및 디렉토리 구성"
+  ansible.builtin.include_tasks: install.yml
+
+- name: "Slurm 공유 NFS 구성"
+  ansible.builtin.include_tasks: nfs.yml
+  when: slurm_nfs_source | length > 0
+
+- name: "MUNGE 공유 키 구성"
+  ansible.builtin.include_tasks: munge.yml
+
+- name: "Slurm 공통 설정 구성"
+  ansible.builtin.include_tasks: configure.yml
+
+- name: "Slurm 테스트 파일 배포"
+  ansible.builtin.include_tasks: copy_tests.yml
+  when: slurm_copy_test_files | bool
+
+- name: "Slurm 공통 handler 실행"
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,59 @@
+---
+- name: Validate Nginx proxy role inputs
+  ansible.builtin.assert:
+    that:
+      - nginx_image | length > 0
+      - nginx_container_name | length > 0
+      - nginx_config_dir is match('^/')
+      - nginx_backend_group in groups
+      - groups.get(nginx_backend_group, []) | length > 0
+      - application_port | int > 0
+    fail_msg: "Nginx proxy role variables or backend inventory group are invalid."
+
+- name: Create Nginx configuration directory
+  ansible.builtin.file:
+    path: "{{ nginx_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Nginx reverse proxy configuration
+  ansible.builtin.template:
+    src: default.conf.j2
+    dest: "{{ nginx_config_dir }}/default.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  register: nginx_proxy_config
+
+- name: Converge Nginx proxy container
+  community.docker.docker_container:
+    name: "{{ nginx_container_name }}"
+    image: "{{ nginx_image }}"
+    state: started
+    restart_policy: "{{ nginx_restart_policy }}"
+    published_ports: "{{ nginx_published_ports }}"
+    volumes:
+      - "{{ nginx_config_dir }}:/etc/nginx/conf.d:ro"
+    pull: "{{ nginx_image_pull_policy }}"
+    recreate: "{{ nginx_proxy_config.changed }}"
+
+- name: Wait for Nginx-to-FastAPI response
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nginx_host_port }}/"
+    return_content: true
+    status_code: 200
+  register: nginx_proxy_response
+  retries: "{{ nginx_health_retries }}"
+  delay: "{{ nginx_health_delay }}"
+  until:
+    - application_expected_message in nginx_proxy_response.content | default('')
+
+- name: Show Nginx proxy deployment result
+  ansible.builtin.debug:
+    msg:
+      - "Image: {{ nginx_image }}"
+      - "Container: {{ nginx_container_name }}"
+      - "Backend group: {{ nginx_backend_group }}"
+      - "End-to-end check: passed"

@@ -1,0 +1,14 @@
+---
+nginx_image: "nginx:1.27"
+nginx_container_name: "web-nginx"
+nginx_restart_policy: "unless-stopped"
+nginx_image_pull_policy: "missing"
+
+nginx_host_port: 80
+nginx_published_ports:
+  - "{{ nginx_host_port }}:80"
+nginx_config_dir: "/data/nginx/conf.d"
+nginx_backend_group: "app"
+
+nginx_health_retries: 12
+nginx_health_delay: 5

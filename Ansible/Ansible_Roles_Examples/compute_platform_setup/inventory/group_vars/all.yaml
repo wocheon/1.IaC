@@ -1,0 +1,175 @@
+---
+# 공통 접속 설정
+# 대상 계정을 별도로 지정하지 않으면 Ansible을 실행한 현재 로컬 계정을 사용한다.
+ansible_user: >-
+  {{ lookup('ansible.builtin.env', 'USER')
+     | default(lookup('ansible.builtin.env', 'LOGNAME'), true) }}
+ansible_python_interpreter: /usr/bin/python3
+
+# Kubernetes: 안정적으로 함께 검증된 minor/CNI 조합을 명시적으로 고정한다.
+kubernetes_repository_minor: "1.36"
+kubernetes_package_version: ""
+kubernetes_cluster_name: kubernetes
+kubernetes_pod_subnet: 192.168.0.0/16
+kubernetes_service_subnet: 10.96.0.0/12
+kubernetes_dns_domain: cluster.local
+kubernetes_control_plane_endpoint: ""
+kubernetes_apiserver_port: 6443
+kubernetes_cri_socket: unix:///run/containerd/containerd.sock
+kubernetes_disable_swap: true
+kubernetes_install_cni: true
+kubernetes_cni_manifest_url: https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/calico.yaml
+kubernetes_manage_admin_user: true
+kubernetes_admin_user: k8suser
+kubernetes_admin_uid: 2001
+kubernetes_admin_gid: 2001
+kubernetes_admin_home: /home/k8suser
+kubernetes_admin_shell: /bin/bash
+
+# Slurm
+slurm_cluster_name: compute-cluster
+slurm_partition_name: compute
+slurm_default_partition: true
+slurm_controller_group: slurm_controllers
+slurm_compute_group: slurm_compute
+slurm_munge_key_path: /etc/munge/munge.key
+slurm_config_path: /etc/slurm/slurm.conf
+slurm_state_save_location: /var/spool/slurmctld
+slurm_slurmd_spool_dir: /var/spool/slurmd
+slurm_log_dir: /var/log/slurm
+slurm_restart_services: true
+slurm_extra_config: ""
+# 배포판별 cgroup plugin 차이를 피하는 안전 기본값. 검증 후 cgroup으로 변경 가능.
+slurm_proctrack_type: proctrack/linuxproc
+slurm_task_plugin: task/affinity
+
+# SlurmDBD / MariaDB accounting. Control VM 로컬 DB를 사용한다.
+slurm_accounting_enabled: true
+slurm_accounting_host: >-
+  {{ hostvars[groups[slurm_controller_group] | first].ansible_host |
+     default(groups[slurm_controller_group] | first) }}
+slurm_accounting_port: 6819
+slurm_accounting_enforce: associations
+slurm_accounting_account: compute
+slurm_accounting_db_name: slurm_acct_db
+slurm_accounting_db_user: slurm
+slurm_jobacct_gather_type: jobacct_gather/linux
+slurm_jobacct_gather_frequency: 30
+
+# 모든 Slurm 호스트에 같은 UID/GID의 별도 작업 사용자를 생성한다.
+slurm_manage_test_user: true
+slurm_test_user: slurmuser
+slurm_test_uid: 2000
+slurm_test_gid: 2000
+slurm_test_home: /home/slurmuser
+slurm_test_shell: /bin/bash
+# 테스트 스크립트를 NFS scripts 디렉토리에 복사한다.
+slurm_copy_test_files: true
+# 공유 작업 데이터용 NFS.
+slurm_nfs_source: "10.1.1.100:/nfs"
+slurm_nfs_dest: /mnt/slurm
+slurm_scripts_dir: "{{ slurm_nfs_dest }}/scripts"
+slurm_outputs_dir: "{{ slurm_nfs_dest }}/outputs"
+
+# GPU 설정 (GPU inventory 그룹에만 역할 적용)
+# NVIDIA Driver / 공통 안전성
+gpu_install_driver: true
+nvidia_driver_version: "580"
+nvidia_driver_flavor: "-open"
+nvidia_driver_source: distro
+nvidia_blacklist_nouveau: true
+nvidia_enable_persistenced: false
+
+gpu_require_nvidia_device: false
+gpu_preflight_enabled: true
+gpu_preflight_min_root_free_gb: 10
+gpu_preflight_fail_on_low_disk: false
+gpu_allow_reboot: false
+gpu_reboot_timeout: 600
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true
+
+# --------------------------------------------------------------------------
+# CUDA / cuDNN
+# gpu_standalone과 slurm_gpu_node_setup에서 사용한다.
+# gpu_docker와 k8s_gpu_node_setup은 이 값과 무관하게 Host CUDA를 설치하지 않는다.
+# --------------------------------------------------------------------------
+gpu_install_cuda: true
+cuda_version: "12.6"
+gpu_install_cudnn: false
+cudnn_version: ""
+
+# --------------------------------------------------------------------------
+# Standalone: Python / PyTorch / TensorFlow
+# --------------------------------------------------------------------------
+gpu_install_pytorch: true
+gpu_install_tensorflow: false
+gpu_python_version: "3"
+gpu_python_venv_path: /opt/gpu-venv
+gpu_python_venv_owner: root
+gpu_python_venv_group: root
+pytorch_version: ""
+tensorflow_version: ""
+
+# 선택적 Host DCGM (gpu_standalone, slurm_gpu_node_setup)
+gpu_install_dcgm: false
+dcgm_cuda_major: "{{ cuda_version.split('.')[0] }}"
+dcgm_package: "datacenter-gpu-manager-4-cuda{{ dcgm_cuda_major }}"
+dcgm_service_name: nvidia-dcgm
+# 진단은 GPU 자원을 사용하므로 workload를 비운 뒤에만 활성화한다.
+dcgm_run_diagnostics: false
+dcgm_diagnostic_level: "1"
+
+# --------------------------------------------------------------------------
+# Docker GPU Host
+# --------------------------------------------------------------------------
+gpu_install_nvidia_container_toolkit: true
+nvidia_container_toolkit_version: ""
+docker_users:
+  - "{{ ansible_user }}"
+docker_manage_daemon_json: true
+docker_default_runtime_nvidia: false
+docker_daemon_options:
+  log-driver: json-file
+  log-opts:
+    max-size: 100m
+    max-file: "3"
+
+# 선택적 Docker DCGM Exporter. 활성화할 때 고정 image tag를 입력한다.
+gpu_install_dcgm_exporter: false
+dcgm_exporter_image: ""
+dcgm_exporter_container_name: dcgm-exporter
+dcgm_exporter_port: 9400
+dcgm_exporter_service_name: gpu-dcgm-exporter
+
+# --------------------------------------------------------------------------
+# Kubernetes GPU Worker
+# Cloud Provider가 Driver를 관리하면 true로 변경한다.
+# DCGM/DCGM Exporter는 이 Node Role이 아닌 GPU Operator 또는 Helm이 관리한다.
+# --------------------------------------------------------------------------
+kubernetes_gpu_driver_managed: false
+kubernetes_container_runtime: containerd
+kubernetes_containerd_config_path: /etc/containerd/config.toml
+kubernetes_set_nvidia_default_runtime: true
+kubernetes_generate_containerd_config: true
+
+# --------------------------------------------------------------------------
+# Slurm GPU Compute Node
+# --------------------------------------------------------------------------
+slurm_gres_config_path: /etc/slurm/gres.conf
+slurm_cgroup_config_path: /etc/slurm/cgroup.conf
+slurm_manage_gres_conf: true
+slurm_gres_autodetect: "off"
+slurm_gpu_type: ""
+slurm_gpu_count: 0
+
+# 기존 Slurm 설정과 실행 중인 Job 보호를 위한 안전 기본값
+slurm_manage_cgroup_conf: false
+slurm_restart_daemon: false
+slurm_daemon_service: slurmd
+
+# GPU 그룹을 비워두면 일반 CPU 클러스터만 구성한다.
+kubernetes_gpu_enabled: true
+slurm_gpu_enabled: true
+kubernetes_gpu_install_device_plugin: true
+kubernetes_gpu_device_plugin_version: v0.17.1

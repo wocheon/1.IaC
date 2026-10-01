@@ -1,0 +1,24 @@
+FROM {{ fastapi_python_image }}
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /code
+
+RUN groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid app --no-create-home app
+
+COPY requirements.txt /code/requirements.txt
+
+RUN pip install --no-cache-dir -r /code/requirements.txt
+
+COPY --chown=app:app app /code/app
+
+USER app
+
+EXPOSE {{ fastapi_container_port }}
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:{{ fastapi_container_port }}/health')"]
+
+CMD ["fastapi", "run", "app/main.py", "--port", "{{ fastapi_container_port }}", "--proxy-headers"]

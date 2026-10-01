@@ -1,0 +1,67 @@
+---
+- name: "Slurm 지원 환경 검증"
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version is version('22.04', '>=')
+      - slurm_common_node_role in ['controller', 'compute']
+      - groups[slurm_controller_group] | default([]) | length == 1
+      - groups[slurm_compute_group] | default([]) | length > 0
+      - not (slurm_copy_test_files | bool) or slurm_nfs_source | length > 0
+    fail_msg: >-
+      Ubuntu 22.04 이상, controller 정확히 1대, compute 1대 이상이 필요합니다.
+      테스트 파일을 배포하려면 slurm_nfs_source도 필요합니다.
+      Slurm 그룹과 Inventory 설정을 확인하세요.
+    quiet: true
+
+- name: "Slurm 노드 이름 검증"
+  ansible.builtin.assert:
+    that:
+      - (hostvars[item].slurm_node_name | default(item)) is match('^[A-Za-z0-9._-]+$')
+    fail_msg: "Slurm NodeName에는 영문, 숫자, 점, 밑줄, 하이픈만 사용할 수 있습니다: {{ item }}"
+    quiet: true
+  loop: "{{ groups[slurm_compute_group] }}"
+
+- name: "Slurm 노드 hostname facts 검증"
+  ansible.builtin.assert:
+    that:
+      - hostvars[item].ansible_hostname is defined
+      - hostvars[item].ansible_hostname | length > 0
+    fail_msg: >-
+      {{ item }}의 ansible_hostname fact가 없습니다.
+      slurm_cluster_setup.yaml의 facts 수집 play를 모든 Slurm 노드에 실행하세요.
+    quiet: true
+  loop: >-
+    {{ groups[slurm_controller_group] + groups[slurm_compute_group] }}
+
+- name: "Slurm 테스트 사용자 UID/GID 일치 검증"
+  ansible.builtin.assert:
+    that:
+      - hostvars[item]._slurm_test_uid is defined
+      - hostvars[item]._slurm_test_gid is defined
+      - hostvars[item]._slurm_test_home is defined
+      - >-
+        hostvars[item]._slurm_test_uid | string ==
+        hostvars[groups[slurm_controller_group] | first]._slurm_test_uid | string
+      - >-
+        hostvars[item]._slurm_test_gid | string ==
+        hostvars[groups[slurm_controller_group] | first]._slurm_test_gid | string
+      - >-
+        hostvars[item]._slurm_test_home ==
+        hostvars[groups[slurm_controller_group] | first]._slurm_test_home
+    fail_msg: >-
+      Slurm 작업 사용자 {{ slurm_test_user }}의 UID/GID가 일치하지 않습니다.
+      controller={{
+        hostvars[groups[slurm_controller_group] | first]._slurm_test_uid | default('unknown')
+      }}:{{
+        hostvars[groups[slurm_controller_group] | first]._slurm_test_gid | default('unknown')
+      }}, {{ item }}={{
+        hostvars[item]._slurm_test_uid | default('unknown')
+      }}:{{
+        hostvars[item]._slurm_test_gid | default('unknown')
+      }}. 모든 Slurm 호스트의 계정 UID/GID와 홈 경로를 동일하게 맞추세요.
+    quiet: true
+  loop: >-
+    {{ groups[slurm_controller_group] + groups[slurm_compute_group] }}
+  loop_control:
+    label: "{{ item }}"

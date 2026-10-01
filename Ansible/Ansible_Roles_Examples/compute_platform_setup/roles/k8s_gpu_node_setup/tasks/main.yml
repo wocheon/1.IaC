@@ -1,0 +1,35 @@
+---
+- name: "Kubernetes GPU Role 입력 검증"
+  ansible.builtin.assert:
+    that:
+      - gpu_install_nvidia_container_toolkit | bool
+      - inventory_hostname in groups.get('kubernetes_workers', [])
+    fail_msg: >-
+      GPU 노드는 kubernetes_workers와 kubernetes_gpu_workers 양쪽에 등록해야 합니다.
+      GPU Operator가 Toolkit까지 관리한다면 이 Role을 함께 사용하지 마세요.
+    quiet: true
+
+- name: "Kubernetes GPU 공통 기반 구성"
+  ansible.builtin.include_role:
+    name: gpu_common
+    public: true
+  vars:
+    gpu_common_install_driver: >-
+      {{ (gpu_install_driver | bool) and not (kubernetes_gpu_driver_managed | bool) }}
+    gpu_common_install_cuda: false
+    gpu_common_install_cudnn: false
+    gpu_common_install_nvidia_container_toolkit: "{{ gpu_install_nvidia_container_toolkit | bool }}"
+    gpu_common_verify_driver: true
+
+- name: "GPU Driver 재부팅 완료 확인"
+  ansible.builtin.assert:
+    that:
+      - not (gpu_reboot_required | default(false) | bool)
+    fail_msg: "GPU worker 재부팅이 필요합니다. 재부팅 후 k8s_gpu_node_setup.yaml을 다시 실행하세요."
+  when: not ansible_check_mode
+
+- name: "Kubernetes GPU 노드 준비 완료"
+  ansible.builtin.debug:
+    msg: >-
+      NVIDIA Driver와 Container Toolkit 준비가 완료되었습니다.
+      다음 단계로 k8s_cluster_setup.yaml을 실행하세요.

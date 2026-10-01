@@ -1,0 +1,212 @@
+---
+- name: "Slurm accounting 설정 검증"
+  ansible.builtin.assert:
+    that:
+      - slurm_accounting_db_name is match('^[A-Za-z0-9_]+$')
+      - slurm_accounting_db_user == 'slurm'
+      - slurm_accounting_account is match('^[A-Za-z0-9_-]+$')
+      - slurm_accounting_port | int > 0
+      - slurm_accounting_port | int <= 65535
+    fail_msg: >-
+      controller 로컬 Unix socket accounting 설정과 DB/account 이름을 확인하세요.
+    quiet: true
+
+- name: "MariaDB와 SlurmDBD 패키지 설치"
+  ansible.builtin.apt:
+    name: "{{ slurm_accounting_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "MariaDB 서비스 활성화"
+  ansible.builtin.systemd:
+    name: mariadb
+    enabled: true
+    state: started
+
+- name: "Slurm accounting DB 조회"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - --batch
+      - --skip-column-names
+      - "--execute=SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{{ slurm_accounting_db_name }}';"
+  register: _slurm_accounting_db
+  changed_when: false
+
+- name: "Slurm accounting DB 생성"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - "--execute=CREATE DATABASE `{{ slurm_accounting_db_name }}`;"
+  when: _slurm_accounting_db.stdout | trim != slurm_accounting_db_name
+
+- name: "Slurm accounting DB 사용자 인증 방식 조회"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - --batch
+      - --skip-column-names
+      - "--execute=SELECT plugin FROM mysql.user WHERE User = '{{ slurm_accounting_db_user }}' AND Host = 'localhost';"
+  register: _slurm_accounting_db_auth
+  changed_when: false
+
+- name: "Slurm accounting DB 사용자 생성"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - "--execute=CREATE USER '{{ slurm_accounting_db_user }}'@'localhost' IDENTIFIED VIA unix_socket;"
+  when: _slurm_accounting_db_auth.stdout | trim | length == 0
+
+- name: "Slurm accounting DB 사용자 Unix socket 인증 설정"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - "--execute=ALTER USER '{{ slurm_accounting_db_user }}'@'localhost' IDENTIFIED VIA unix_socket;"
+  when:
+    - _slurm_accounting_db_auth.stdout | trim | length > 0
+    - _slurm_accounting_db_auth.stdout | trim != 'unix_socket'
+
+- name: "Slurm accounting DB 권한 설정"
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - "--execute=GRANT ALL PRIVILEGES ON `{{ slurm_accounting_db_name }}`.* TO '{{ slurm_accounting_db_user }}'@'localhost';"
+  changed_when: false
+
+- name: "slurmdbd.conf 생성"
+  ansible.builtin.template:
+    src: slurmdbd.conf.j2
+    dest: "{{ slurmdbd_config_path }}"
+    owner: slurm
+    group: slurm
+    mode: "0600"
+    backup: true
+  register: _slurmdbd_config
+
+- name: "SlurmDBD 서비스 활성화"
+  ansible.builtin.systemd:
+    name: slurmdbd
+    enabled: true
+    state: "{{ 'restarted' if _slurmdbd_config.changed else 'started' }}"
+    daemon_reload: true
+
+- name: "SlurmDBD 응답 확인"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --noheader
+      - --parsable2
+      - show
+      - cluster
+      - format=Cluster
+  register: _slurmdbd_ready
+  changed_when: false
+  retries: 10
+  delay: 3
+  until: _slurmdbd_ready.rc == 0
+
+- name: "Slurm accounting cluster 조회"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --noheader
+      - --parsable2
+      - show
+      - cluster
+      - where
+      - "name={{ slurm_cluster_name }}"
+      - format=Cluster
+  register: _slurm_accounting_cluster
+  changed_when: false
+
+- name: "Slurm accounting cluster 등록"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --immediate
+      - add
+      - cluster
+      - "{{ slurm_cluster_name }}"
+  when: slurm_cluster_name not in _slurm_accounting_cluster.stdout
+
+- name: "Slurm accounting account 조회"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --noheader
+      - --parsable2
+      - show
+      - account
+      - where
+      - "name={{ slurm_accounting_account }}"
+      - format=Account
+  register: _slurm_accounting_account_result
+  changed_when: false
+
+- name: "Slurm accounting account 등록"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --immediate
+      - add
+      - account
+      - "{{ slurm_accounting_account }}"
+      - "Organization={{ slurm_cluster_name }}"
+  when: slurm_accounting_account not in _slurm_accounting_account_result.stdout
+
+- name: "Slurm 작업 사용자 association 조회"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --noheader
+      - --parsable2
+      - show
+      - association
+      - where
+      - "cluster={{ slurm_cluster_name }}"
+      - "account={{ slurm_accounting_account }}"
+      - "user={{ slurm_test_user }}"
+      - format=User,Account
+  register: _slurm_accounting_user_assoc
+  changed_when: false
+
+- name: "Slurm 작업 사용자 association 등록"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --immediate
+      - add
+      - user
+      - "{{ slurm_test_user }}"
+      - "Cluster={{ slurm_cluster_name }}"
+      - "Account={{ slurm_accounting_account }}"
+      - "DefaultAccount={{ slurm_accounting_account }}"
+  when: slurm_test_user not in _slurm_accounting_user_assoc.stdout
+
+- name: "Slurm 작업 사용자 기본 account 조회"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --noheader
+      - --parsable2
+      - show
+      - user
+      - where
+      - "name={{ slurm_test_user }}"
+      - format=DefaultAccount
+  register: _slurm_accounting_user_default
+  changed_when: false
+
+- name: "Slurm 작업 사용자 기본 account 설정"
+  ansible.builtin.command:
+    argv:
+      - sacctmgr
+      - --immediate
+      - modify
+      - user
+      - where
+      - "name={{ slurm_test_user }}"
+      - set
+      - "DefaultAccount={{ slurm_accounting_account }}"
+  when: _slurm_accounting_user_default.stdout | trim != slurm_accounting_account

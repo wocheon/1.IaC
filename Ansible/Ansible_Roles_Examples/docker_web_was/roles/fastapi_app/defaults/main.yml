@@ -1,0 +1,18 @@
+---
+fastapi_image: "fastapi-demo:2.0"
+fastapi_container_name: "app-fastapi"
+fastapi_build_dir: "/opt/fastapi-app"
+fastapi_restart_policy: "unless-stopped"
+
+fastapi_python_image: "python:3.13-slim"
+fastapi_package_version: "0.116.1"
+fastapi_host_port: 8000
+fastapi_container_port: 8000
+fastapi_published_ports:
+  - "{{ fastapi_host_port }}:{{ fastapi_container_port }}"
+
+fastapi_title: "Ansible FastAPI Example"
+fastapi_message: "Nginx-FastAPI connection is working"
+
+fastapi_health_retries: 12
+fastapi_health_delay: 5

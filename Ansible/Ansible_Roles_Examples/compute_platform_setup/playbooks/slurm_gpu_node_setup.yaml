@@ -1,0 +1,11 @@
+---
+- name: "Slurm GPU compute 노드 준비"
+  hosts: slurm_gpu_compute
+  become: true
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+  tags: [slurm-gpu-node]
+  roles:
+    - role: slurm_gpu_node_setup
+      when: slurm_gpu_enabled | default(true) | bool

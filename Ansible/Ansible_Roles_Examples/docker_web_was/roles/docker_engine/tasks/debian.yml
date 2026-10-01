@@ -1,0 +1,139 @@
+---
+- name: Validate Debian-family distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in docker_engine_debian_distributions
+    fail_msg: >-
+      {{ ansible_distribution }} is not in docker_engine_debian_distributions.
+      Add an explicit repository mapping before using this role.
+
+- name: Remove conflicting Docker packages on Debian-family systems
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+    lock_timeout: "{{ docker_engine_apt_lock_timeout }}"
+  when: docker_engine_remove_conflicting_packages | bool
+
+- name: Install Docker repository prerequisites on Debian-family systems
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - python3-requests
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    lock_timeout: "{{ docker_engine_apt_lock_timeout }}"
+
+- name: Create Docker APT keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Docker repository GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Read Debian package architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: docker_engine_apt_arch
+  changed_when: false
+
+- name: Configure Docker APT repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ docker_engine_apt_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} {{ docker_engine_repo_channel }}
+    filename: docker
+    state: present
+    update_cache: true
+
+- name: Read available Docker Engine APT versions
+  ansible.builtin.shell: >-
+    set -o pipefail &&
+    apt-cache madison docker-ce |
+    awk '{print $3}'
+  args:
+    executable: /bin/bash
+  register: docker_engine_apt_available_versions
+  changed_when: false
+
+- name: Fail when Docker Engine APT repository has no packages
+  ansible.builtin.fail:
+    msg: >-
+      No docker-ce packages were found for distribution={{ ansible_distribution }},
+      release={{ ansible_distribution_release }},
+      architecture={{ docker_engine_apt_arch.stdout }}.
+      Check /etc/apt/sources.list.d/docker.list and run apt-cache policy docker-ce.
+  when: docker_engine_apt_available_versions.stdout_lines | length == 0
+
+- name: Select requested Docker Engine APT version
+  ansible.builtin.set_fact:
+    docker_engine_apt_version: >-
+      {{
+        docker_engine_apt_available_versions.stdout_lines
+        | select('search', docker_engine_version | regex_escape)
+        | first
+        | default('')
+      }}
+  when: docker_engine_version | lower != "latest"
+
+- name: Fail when requested Docker Engine APT version is unavailable
+  ansible.builtin.fail:
+    msg: >-
+      Docker Engine {{ docker_engine_version }} is unavailable for
+      {{ ansible_distribution }} {{ ansible_distribution_release }}
+      ({{ docker_engine_apt_arch.stdout }}).
+      Available versions include:
+      {{ docker_engine_apt_available_versions.stdout_lines[:10] | join(', ') }}.
+      Set docker_engine_version to one of these versions or to "latest".
+  when:
+    - docker_engine_version | lower != "latest"
+    - docker_engine_apt_version | default('') | length == 0
+    - not docker_engine_install_latest_when_version_unavailable | bool
+
+- name: Install requested Docker Engine APT version
+  ansible.builtin.apt:
+    name:
+      - "docker-ce={{ docker_engine_apt_version }}"
+      - "docker-ce-cli={{ docker_engine_apt_version }}"
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    lock_timeout: "{{ docker_engine_apt_lock_timeout }}"
+  when:
+    - docker_engine_version | lower != "latest"
+    - docker_engine_apt_version | default('') | length > 0
+
+- name: Install latest Docker Engine APT packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+    lock_timeout: "{{ docker_engine_apt_lock_timeout }}"
+  when: >-
+    docker_engine_version | lower == "latest" or
+    (
+      docker_engine_apt_version | default('') | length == 0 and
+      docker_engine_install_latest_when_version_unavailable | bool
+    )

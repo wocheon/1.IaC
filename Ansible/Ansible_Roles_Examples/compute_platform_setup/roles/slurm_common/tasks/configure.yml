@@ -1,0 +1,17 @@
+---
+- name: "공통 slurm.conf 생성"
+  ansible.builtin.template:
+    src: slurm.conf.j2
+    dest: "{{ slurm_config_path }}"
+    owner: "{{ slurm_config_owner }}"
+    group: "{{ slurm_config_group }}"
+    mode: "{{ slurm_config_mode }}"
+    backup: true
+  register: _slurm_config_template
+  notify: restart slurm daemon
+
+- name: "MUNGE 로컬 인증 검증"
+  ansible.builtin.command: munge -n
+  register: _slurm_munge_test
+  changed_when: false
+  no_log: true

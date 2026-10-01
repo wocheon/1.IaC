@@ -1,0 +1,16 @@
+---
+slurm_gres_config_path: /etc/slurm/gres.conf
+slurm_cgroup_config_path: /etc/slurm/cgroup.conf
+slurm_gpu_config_owner: root
+slurm_gpu_config_group: root
+slurm_gpu_config_mode: "0644"
+
+slurm_manage_gres_conf: true
+slurm_gres_autodetect: nvml
+slurm_gpu_type: ""
+slurm_gpu_count: 0
+
+slurm_manage_cgroup_conf: false
+slurm_cgroup_constrain_devices: true
+slurm_cgroup_constrain_cores: true
+slurm_cgroup_constrain_ram_space: true

@@ -1,0 +1,22 @@
+---
+- name: "Slurm compute 공통 구성"
+  ansible.builtin.include_role:
+    name: slurm_common
+    public: true
+  vars:
+    slurm_common_node_role: compute
+
+- name: "slurmd 서비스 활성화"
+  ansible.builtin.systemd:
+    name: slurmd
+    enabled: true
+    state: >-
+      {{ 'restarted' if (slurm_restart_services | bool and
+         (_slurm_gpu_gres_config.changed | default(false) or
+          _slurm_gpu_cgroup_config.changed | default(false))) else 'started' }}
+
+- name: "slurmd 활성 상태 검증"
+  ansible.builtin.command: systemctl is-active slurmd
+  register: _slurm_compute_active
+  changed_when: false
+  failed_when: _slurm_compute_active.stdout != 'active'

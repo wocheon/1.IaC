@@ -1,0 +1,15 @@
+---
+gpu_install_driver: true
+gpu_install_cuda: true
+gpu_install_cudnn: false
+
+# 선택적 Host DCGM. Slurm Job이 없는 drain 상태에서 진단을 수행한다.
+gpu_install_dcgm: false
+dcgm_cuda_major: "{{ cuda_version.split('.')[0] }}"
+dcgm_package: "datacenter-gpu-manager-4-cuda{{ dcgm_cuda_major }}"
+dcgm_service_name: nvidia-dcgm
+dcgm_run_diagnostics: false
+dcgm_diagnostic_level: "1"
+
+gpu_verify_installation: true
+gpu_verify_fail_on_error: true

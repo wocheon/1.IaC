@@ -1,0 +1,8 @@
+---
+- name: "Docker GPU 노드 준비"
+  hosts: gpu_docker_nodes
+  become: true
+  gather_facts: true
+  tags: [docker]
+  roles:
+    - gpu_docker

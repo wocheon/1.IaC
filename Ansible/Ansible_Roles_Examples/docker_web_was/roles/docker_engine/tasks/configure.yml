@@ -1,0 +1,89 @@
+---
+- name: Create Docker Engine configuration directory
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create Docker Engine data directory
+  ansible.builtin.file:
+    path: "{{ docker_engine_data_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0711"
+
+- name: Manage complete Docker Engine daemon configuration
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+    validate: "dockerd --validate --config-file=%s"
+  notify: Restart Docker Engine
+
+- name: Create containerd configuration directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create containerd root directory
+  ansible.builtin.file:
+    path: "{{ containerd_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0711"
+
+- name: Check containerd configuration file
+  ansible.builtin.stat:
+    path: /etc/containerd/config.toml
+  register: containerd_config_file
+
+- name: Generate default containerd configuration
+  ansible.builtin.command: containerd config default
+  register: containerd_default_config
+  changed_when: false
+  when: not containerd_config_file.stat.exists
+
+- name: Create initial containerd configuration
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ containerd_default_config.stdout }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  when: not containerd_config_file.stat.exists
+  notify:
+    - Restart containerd
+    - Restart Docker Engine
+
+- name: Configure containerd root directory
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^root\s*='
+    line: 'root = "{{ containerd_root }}"'
+    insertbefore: '^\['
+    backup: true
+  notify:
+    - Restart containerd
+    - Restart Docker Engine
+
+- name: Configure containerd state directory
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^state\s*='
+    line: 'state = "{{ containerd_state }}"'
+    insertbefore: '^\['
+    backup: true
+  notify:
+    - Restart containerd
+    - Restart Docker Engine
